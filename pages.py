@@ -65,7 +65,7 @@ def login_page(parent_window = None, db = None):
 
     register_button = Button(login_frame, text="Register", command=register_clicked, font = ("Ariel 15 bold"))
     register_button.place(x = window_width//30,y = 7*window_height//20,height = window_height//15,width = 2*window_width//5-35)
-    login_as_page('srilekhasomanchi@gmail.com', root)
+    login_as_page('yashladani@gmail.com',root,db)
     root.mainloop()
 
 def register_page(parent_window = None, db = None):
@@ -233,12 +233,29 @@ def manager_home_page(manager, parent_window = None, db = None):
     background_image_label.image = background_image
     background_image_label.place(x=0, y=0)
     details = db.get_restaurant_details_managed_by(manager.email)
-    login_frame = Frame(root, bg="white")
-    login_frame.place(x=window_width // 15, y=(window_height // 4), height=window_height // 2,
-                      width=3 * window_width // 7)
+    frame = Frame(root, bg="white")
+    frame.place(x=window_width // 15, y=(window_height // 4), height=window_height // 3,
+                      width=4 * window_width // 9)
+
+    def add_restaurant_clicked():
+        a = 1
+
+    def manage_clicked():
+        a = 1
+
     if details == None:
-        email_label = Label(login_frame, text="You are not a manager of any restaurant. You can choose the below option to ", font=("Goudy old style", 17, "bold"), fg="grey", bg="white")
-    #else:
+        label = Label(frame, text="You are not a manager of any restaurant", font=("Goudy old style", 20, "bold"), fg="grey", bg="white")
+        label.place(y=2 * window_height // 20, x=window_width // 30)
+        add_restaurant_button = Button(frame, text="Add a restaurant", command=add_restaurant_clicked, font = ("Ariel 15 bold"))
+        add_restaurant_button.place(x = window_width//30,y = 3.5*window_height//20,height = window_height//15,width = 2*window_width//5-35)
+    else:
+        email_label = Label(frame, text="Restaurant name: {0}".format(details[2]), font=("Goudy old style", 20, "bold"),
+                            fg="grey", bg="white")
+        email_label.place(y=2 * window_height // 20, x=window_width // 30)
+        manage_restaurant_button = Button(frame, text="Manage", command=manage_clicked,
+                                       font=("Ariel 15 bold"))
+        manage_restaurant_button.place(x=window_width // 30, y=3.5 * window_height // 20, height=window_height // 15,
+                                    width=2 * window_width // 5 - 35)
 
 
 #def customer_home_page():

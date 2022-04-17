@@ -65,7 +65,7 @@ def login_page(parent_window = None, db = None):
 
     register_button = Button(login_frame, text="Register", command=register_clicked, font = ("Ariel 15 bold"))
     register_button.place(x = window_width//30,y = 7*window_height//20,height = window_height//15,width = 2*window_width//5-35)
-    #login_as_page('yashladani@gmail.com',root,db)
+    login_as_page('pavan',root,db)
     root.mainloop()
 
 def register_page(parent_window = None, db = None):
@@ -184,7 +184,10 @@ def login_as_page(email, parent_window = None,db = None):
     root.resizable(False,False)
 
     def login_as_customer_clicked():
-        a = 1
+        details = db.get_user_details(email)
+        customer = User(email, details[0], details[1], details[2], details[3])
+        customer_home_page(customer, root, db)
+
     def login_as_manager_clicked():
 
         details = db.get_user_details(email)
@@ -318,4 +321,53 @@ def manager_home_page(manager, parent_window = None, db = None):
 
 
 
-#def customer_home_page():
+def customer_home_page(user, parent_window = None, db = None):
+    if db == None:
+        db = DataBase()
+    if(parent_window != None):
+        parent_window.destroy()
+    root = tk.Tk()
+    root.title('Welcome ' + user.name.capitalize())
+
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+
+    window_width = (6*screen_width)//7
+    window_height = (6*screen_height)//7
+
+    center_x = int(screen_width/2-window_width/2)
+    center_y = int(screen_height/2-window_height/2)
+
+    root.geometry(f'{window_width}x{window_height}+{center_x}+{center_y}')
+
+    root.iconbitmap('Images/logo.ico')
+    root.resizable(False, False)
+    background_image = ImageTk.PhotoImage(
+        Image.open('Images/manager_home_page_background.jpg').resize((window_width + 100, window_height), Image.ANTIALIAS))
+    background_image_label = tk.Label(root, image=background_image)
+    background_image_label.image = background_image
+    background_image_label.place(x=0, y=0)
+    details = db.get_restaurant_details_managed_by(user.email)
+    frame = Frame(root, bg="white")
+    frame.place(x=window_width // 15, y=(window_height // 4), height=window_height // 3,
+                    width=4 * window_width // 9)
+
+    def add_restaurant_clicked():
+        add_restaurant_page(user,root,db)
+
+    def manage_clicked():
+        a = 1
+
+    if details == None:
+        label = Label(frame, text="You are not a manager of any restaurant", font=("Goudy old style", 20, "bold"), fg="grey", bg="white")
+        label.place(y=2 * window_height // 20, x=window_width // 30)
+        add_restaurant_button = Button(frame, text="Add a restaurant", command=add_restaurant_clicked, font = ("Ariel 15 bold"))
+        add_restaurant_button.place(x = window_width//30,y = 3.5*window_height//20,height = window_height//15,width = 2*window_width//5-35)
+    else:
+        email_label = Label(frame, text="Restaurant name: {0}".format(details[2]), font=("Goudy old style", 20, "bold"),
+                            fg="grey", bg="white")
+        email_label.place(y=2 * window_height // 20, x=window_width // 30)
+        manage_restaurant_button = Button(frame, text="Manage", command=manage_clicked,
+                                    font=("Ariel 15 bold"))
+        manage_restaurant_button.place(x=window_width // 30, y=3.5 * window_height // 20, height=window_height // 15,
+                                    width=2 * window_width // 5 - 35)

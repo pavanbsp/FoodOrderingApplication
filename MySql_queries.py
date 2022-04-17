@@ -1,11 +1,10 @@
 import MySQLdb as mdb
-from mysql.connector import Error
 import numpy as np
 
 class DataBase:
     def __init__(self):
         try:
-            self.database = mdb.connect('localhost', 'root', 'Ypk@1050', 'temp')
+            self.database = mdb.connect('localhost', 'root', 'pavan', 'ok')
 
             cursor = self.database.cursor()
             cursor.execute('''CREATE TABLE IF NOT EXISTS users (

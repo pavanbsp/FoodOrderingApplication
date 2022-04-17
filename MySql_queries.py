@@ -5,8 +5,8 @@ import numpy as np
 class DataBase:
     def __init__(self):
         try:
-            self.database = mdb.connect('localhost', 'root', 'pavan', 'ok')
-            #self.database = mdb.connect('localhost', 'root', 'Ypk@1050', 'temp')
+            #self.database = mdb.connect('localhost', 'root', 'pavan', 'ok')
+            self.database = mdb.connect('localhost', 'root', 'Ypk@1050', 'temp')
 
             cursor = self.database.cursor()
             cursor.execute('''CREATE TABLE IF NOT EXISTS users (

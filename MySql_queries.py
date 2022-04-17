@@ -5,7 +5,6 @@ import numpy as np
 class DataBase:
     def __init__(self):
         try:
-            #self.database = mdb.connect('localhost', 'root', 'pavan', 'ok')
             self.database = mdb.connect('localhost', 'root', 'Ypk@1050', 'temp')
 
             cursor = self.database.cursor()
@@ -124,3 +123,11 @@ class DataBase:
             result.append(x[0])
         return result
 
+    def get_areas_in_city(self,city):
+        cursor = self.database.cursor()
+        cursor.execute("select name from areas where city = '{0}'".format(city))
+        data = cursor.fetchall()
+        result = []
+        for x in data:
+            result.append(x[0])
+        return result

@@ -65,8 +65,7 @@ def login_page(parent_window = None, db = None):
 
     register_button = Button(login_frame, text="Register", command=register_clicked, font = ("Ariel 15 bold"))
     register_button.place(x = window_width//30,y = 7*window_height//20,height = window_height//15,width = 2*window_width//5-35)
-    login_as_page('pavan',root,db)
-    #login_as_page('yashladani@gmail.com',root,db)
+    login_as_page('yashladani@gmail.com',root,db)
     root.mainloop()
 
 def register_page(parent_window = None, db = None):
@@ -185,10 +184,7 @@ def login_as_page(email, parent_window = None,db = None):
     root.resizable(False,False)
 
     def login_as_customer_clicked():
-        details = db.get_user_details(email)
-        customer = User(email, details[0], details[1], details[2], details[3])
-        customer_home_page(customer, root, db)
-
+        a = 1
     def login_as_manager_clicked():
 
         details = db.get_user_details(email)
@@ -240,26 +236,62 @@ def add_restaurant_page(manager, parent_window = None, db = None):
 
     frame = Frame(root, bg="white")
 
-    clicked = StringVar()
+    city_clicked = StringVar()
+    area_clicked = StringVar()
 
-    clicked.set(cities[0])
+    city_clicked.set(cities[0])
+    areas = db.get_areas_in_city(cities[0])
+    area_clicked.set(areas[0])
 
-    drop = OptionMenu(frame, clicked, *cities)
-    drop.pack()
+    frame.place(x=window_width//15, y=(window_height//6), height = 2*window_height//3, width = 4*window_width//7)
 
-    frame.place(x=window_width//15, y=(window_height//4), height = window_height//2, width = 3*window_width//7)
 
     name_label = Label(frame, text="Restaurant name", font = ("Goudy old style",17,"bold"),fg="grey",bg="white")
     name_entry = Entry(frame,font=("times new roman",15),bg="lightgray")
     name_entry.focus()
     opening_label = Label(frame, text="Opening time", font=("Goudy old style", 17, "bold"), fg="grey", bg="white")
-    opening_entry = Entry(frame, font=("times new roman", 15), bg="lightgray",show="*")
-    closing_label = Label(frame, text="Opening time", font=("Goudy old style", 17, "bold"), fg="grey", bg="white")
-    closing_entry = Entry(frame, font=("times new roman", 15), bg="lightgray", show="*")
-    name_label.place(y = 2*window_height//20,x =  window_width//30)
-    name_entry.place(y = 2*window_height//20,x = 2.2*window_width//20,width = 2*window_width//5-130)
-    opening_label.place(y = 3.5*window_height//20,x =  window_width//30)
-    closing_entry.place(y = 3.5*window_height//20,x =  2.2*window_width//20,width = 2*window_width//5-130)
+    opening_entry = Entry(frame, font=("times new roman", 15), bg="lightgray")
+    closing_label = Label(frame, text="Closing time", font=("Goudy old style", 17, "bold"), fg="grey", bg="white")
+    closing_entry = Entry(frame, font=("times new roman", 15), bg="lightgray")
+    city_label = Label(frame, text="City", font=("Goudy old style", 17, "bold"), fg="grey", bg="white")
+    city_entry = OptionMenu(frame, city_clicked, *cities)
+    area_label = Label(frame, text="Area", font=("Goudy old style", 17, "bold"), fg="grey", bg="white")
+    area_entry = OptionMenu(frame, area_clicked, *areas)
+
+    def refresh(self):
+        nonlocal areas
+        self.destroy()
+        print(areas)
+        self.__init__(frame, area_clicked, *areas)
+        print(areas)
+        area_entry.place(y=240, x=240, width=350, height=30)
+        area_entry.bind('<Button>', check)
+
+    def check(event):
+        nonlocal areas
+        nonlocal area_entry
+        nonlocal area_clicked
+        print(city_clicked.get())
+        areas = db.get_areas_in_city(city_clicked.get())
+        area_clicked.set(areas[0])
+        area_entry = OptionMenu(frame, area_clicked, *areas)
+        area_entry.place(y=240, x=240, width=350, height=30)
+        area_entry.bind('<Button>', check)
+
+    area_entry.bind('<Button>', check)
+    city_entry.bind('<Button>', check)
+
+    name_label.place(y = 60,x =  40)
+    name_entry.place(y = 60,x = 240,width = 350, height = 30)
+    opening_label.place(y = 120,x = 40)
+    opening_entry.place(y = 120,x =  190,width = 150,height = 30)
+    closing_label.place(y = 120,x =  360)
+    closing_entry.place(y=120, x=510, width=150,height = 30)
+    city_label.place(y=180, x=40)
+    city_entry.place(y=180, x=240, width=350, height=30)
+    area_label.place(y=240,x=40)
+    area_entry.place(y=240,x=240,width=350,height=30)
+
 
     #login_button = Button(login_frame, text="Login", command=lambda:login_clicked(email_entry.get(), pass_entry.get()), font = ("Ariel 15 bold"))
     #login_button.place(x = window_width//30,y = 5*window_height//20,height = window_height//15,width = 2*window_width//5-35)
@@ -320,55 +352,4 @@ def manager_home_page(manager, parent_window = None, db = None):
         manage_restaurant_button.place(x=window_width // 30, y=3.5 * window_height // 20, height=window_height // 15,
                                     width=2 * window_width // 5 - 35)
 
-
-
-def customer_home_page(user, parent_window = None, db = None):
-    if db == None:
-        db = DataBase()
-    if(parent_window != None):
-        parent_window.destroy()
-    root = tk.Tk()
-    root.title('Welcome ' + user.name.capitalize())
-
-    screen_width = root.winfo_screenwidth()
-    screen_height = root.winfo_screenheight()
-
-    window_width = (6*screen_width)//7
-    window_height = (6*screen_height)//7
-
-    center_x = int(screen_width/2-window_width/2)
-    center_y = int(screen_height/2-window_height/2)
-
-    root.geometry(f'{window_width}x{window_height}+{center_x}+{center_y}')
-
-    root.iconbitmap('Images/logo.ico')
-    root.resizable(False, False)
-    background_image = ImageTk.PhotoImage(
-        Image.open('Images/manager_home_page_background.jpg').resize((window_width + 100, window_height), Image.ANTIALIAS))
-    background_image_label = tk.Label(root, image=background_image)
-    background_image_label.image = background_image
-    background_image_label.place(x=0, y=0)
-    details = db.get_restaurant_details_managed_by(user.email)
-    frame = Frame(root, bg="white")
-    frame.place(x=window_width // 15, y=(window_height // 4), height=window_height // 3,
-                    width=4 * window_width // 9)
-
-    def add_restaurant_clicked():
-        add_restaurant_page(user,root,db)
-
-    def manage_clicked():
-        a = 1
-
-    if details == None:
-        label = Label(frame, text="You are not a manager of any restaurant", font=("Goudy old style", 20, "bold"), fg="grey", bg="white")
-        label.place(y=2 * window_height // 20, x=window_width // 30)
-        add_restaurant_button = Button(frame, text="Add a restaurant", command=add_restaurant_clicked, font = ("Ariel 15 bold"))
-        add_restaurant_button.place(x = window_width//30,y = 3.5*window_height//20,height = window_height//15,width = 2*window_width//5-35)
-    else:
-        email_label = Label(frame, text="Restaurant name: {0}".format(details[2]), font=("Goudy old style", 20, "bold"),
-                            fg="grey", bg="white")
-        email_label.place(y=2 * window_height // 20, x=window_width // 30)
-        manage_restaurant_button = Button(frame, text="Manage", command=manage_clicked,
-                                    font=("Ariel 15 bold"))
-        manage_restaurant_button.place(x=window_width // 30, y=3.5 * window_height // 20, height=window_height // 15,
-                                    width=2 * window_width // 5 - 35)
+#def customer_home_page():

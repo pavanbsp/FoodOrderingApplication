@@ -66,6 +66,7 @@ def login_page(parent_window = None, db = None):
     register_button = Button(login_frame, text="Register", command=register_clicked, font = ("Ariel 15 bold"))
     register_button.place(x = window_width//30,y = 7*window_height//20,height = window_height//15,width = 2*window_width//5-35)
     login_as_page('pavan',root,db)
+    #login_as_page('yashladani@gmail.com',root,db)
     root.mainloop()
 
 def register_page(parent_window = None, db = None):

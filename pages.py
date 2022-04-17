@@ -257,29 +257,23 @@ def add_restaurant_page(manager, parent_window = None, db = None):
     city_entry = OptionMenu(frame, city_clicked, *cities)
     area_label = Label(frame, text="Area", font=("Goudy old style", 17, "bold"), fg="grey", bg="white")
     area_entry = OptionMenu(frame, area_clicked, *areas)
-
-    def refresh(self):
-        nonlocal areas
-        self.destroy()
-        print(areas)
-        self.__init__(frame, area_clicked, *areas)
-        print(areas)
-        area_entry.place(y=240, x=240, width=350, height=30)
-        area_entry.bind('<Button>', check)
+    address_label = Label(frame, text="Address", font=("Goudy old style", 17, "bold"), fg="grey", bg="white")
+    address_entry = Entry(frame, font=("times new roman", 15), bg="lightgray")
+    phone_label = Label(frame, text="Phone", font=("Goudy old style", 17, "bold"), fg="grey", bg="white")
+    phone_entry = Entry(frame, font=("times new roman", 15), bg="lightgray")
 
     def check(event):
         nonlocal areas
         nonlocal area_entry
         nonlocal area_clicked
-        print(city_clicked.get())
         areas = db.get_areas_in_city(city_clicked.get())
-        area_clicked.set(areas[0])
+        if area_clicked.get() not in areas:
+            area_clicked.set(areas[0])
         area_entry = OptionMenu(frame, area_clicked, *areas)
         area_entry.place(y=240, x=240, width=350, height=30)
-        area_entry.bind('<Button>', check)
+        area_entry.bind('<Enter>', check)
 
-    area_entry.bind('<Button>', check)
-    city_entry.bind('<Button>', check)
+    area_entry.bind('<Enter>', check)
 
     name_label.place(y = 60,x =  40)
     name_entry.place(y = 60,x = 240,width = 350, height = 30)
@@ -291,15 +285,22 @@ def add_restaurant_page(manager, parent_window = None, db = None):
     city_entry.place(y=180, x=240, width=350, height=30)
     area_label.place(y=240,x=40)
     area_entry.place(y=240,x=240,width=350,height=30)
+    address_label.place(y=300, x=40)
+    address_entry.place(y=300, x=240, width=350, height=30)
+    phone_label.place(y=360, x=40)
+    phone_entry.place(y=360, x=240, width=350, height=30)
 
+    def register_clicked():
+        a = 1
 
-    #login_button = Button(login_frame, text="Login", command=lambda:login_clicked(email_entry.get(), pass_entry.get()), font = ("Ariel 15 bold"))
-    #login_button.place(x = window_width//30,y = 5*window_height//20,height = window_height//15,width = 2*window_width//5-35)
+    def cancel_clicked():
+        manager_home_page(manager, root, db)
 
-    #register_button = Button(login_frame, text="Register", command=register_clicked, font = ("Ariel 15 bold"))
-    #register_button.place(x = window_width//30,y = 7*window_height//20,height = window_height//15,width = 2*window_width//5-35)
+    register_button = Button(frame, text="Register", command=register_clicked, font = ("Ariel 15 bold"))
+    register_button.place(x = 40,y = 420,height = 40,width = 250)
 
-
+    cancel_button = Button(frame, text="Cancel", command=cancel_clicked, font = ("Ariel 15 bold"))
+    cancel_button.place(x = 340,y = 420,height = 40,width = 250)
 
 def manager_home_page(manager, parent_window = None, db = None):
     if db == None:

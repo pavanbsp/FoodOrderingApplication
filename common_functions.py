@@ -25,3 +25,9 @@ def get_hours_minutes_from_time(s):
     minutes *= 10
     minutes += ord(s[4]) - ord('0')
     return (hours,minutes)
+
+def convert_string_to_bool(s):
+    if s == "True":
+        return True
+    else:
+        return False

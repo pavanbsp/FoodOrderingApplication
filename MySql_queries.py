@@ -151,3 +151,17 @@ class DataBase:
 
         cursor.execute("INSERT into restaurants (restaurant_id,manager_email,name,opening_time,closing_time,address,area_id,phone,flag) values ('{0}','{1}','{2}','{3}','{4}','{5}','{6}','{7}','False')".format(id,manager_email,name,opening_time,closing_time,address,area_id,phone))
         self.database.commit()
+
+    def insert_food_item(self,restaurant_id,name,description,price):
+        cursor = self.database.cursor()
+        id = ""
+        for i in range(10):
+            id += (chr(np.random.randint(ord('0'), ord('9') + 1)))
+        cursor.execute("INSERT into food_items (food_id, restaurant_id, name, description, availability, price) values ('{0}','{1}','{2}','{3}','False',{4})".format(id, restaurant_id, name, description, price))
+        self.database.commit()
+
+    def get_food_items(self, restaurant_id):
+        cursor = self.database.cursor()
+        cursor.execute("select * from food_items where restaurant_id = '{0}'".format(restaurant_id))
+        data = cursor.fetchall()
+        return data

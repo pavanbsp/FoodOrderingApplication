@@ -20,19 +20,19 @@ class DataBase:
                                                 restaurant_id varchar(50) PRIMARY KEY,
                                                 manager_email varchar(50),
                                                 name varchar(100),
-                                                opening_time time,
-                                                closing_time time,
-                                                status varchar(4),
+                                                opening_time varchar(5),
+                                                closing_time varchar(5),
                                                 address varchar(200),
                                                 area_id varchar(10),
-                                                phone varchar(10))''')
+                                                phone varchar(10),
+                                                flag varchar(5))''')
 
             cursor.execute('''CREATE TABLE IF NOT EXISTS food_items(
                                                 food_id varchar(50) PRIMARY KEY,
                                                 restaurant_id varchar(50),
                                                 name varchar(50),
                                                 description varchar(300),
-                                                availability varchar(4),
+                                                availability varchar(5),
                                                 price double
                                                 )''')
 
@@ -131,3 +131,23 @@ class DataBase:
         for x in data:
             result.append(x[0])
         return result
+
+    def insert_restaurant(self,manager_email,name,opening_time,closing_time,address,area,city,phone):
+        cursor = self.database.cursor()
+        id = ""
+        for i in range(10):
+            id += (chr(np.random.randint(ord('0'), ord('9') + 1)))
+        cursor.execute("select area_id from areas where city = '{0}' and name = '{1}'".format(city,area))
+        data = cursor.fetchall()
+        area_id = data[0][0]
+        cursor.execute("select * from restaurants where name = '{0}' and area_id = '{1}'".format(name,area_id))
+        data = cursor.fetchall()
+        if len(data) > 0:
+            return 1
+        cursor.execute("select * from restaurants where phone = '{0}'".format(phone))
+        data = cursor.fetchall()
+        if len(data) > 0:
+            return 2
+
+        cursor.execute("INSERT into restaurants (restaurant_id,manager_email,name,opening_time,closing_time,address,area_id,phone,flag) values ('{0}','{1}','{2}','{3}','{4}','{5}','{6}','{7}','False')".format(id,manager_email,name,opening_time,closing_time,address,area_id,phone))
+        self.database.commit()

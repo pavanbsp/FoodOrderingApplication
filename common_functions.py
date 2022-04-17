@@ -14,3 +14,14 @@ def is_numeric(s):
             continue
         return False
     return True
+
+def get_hours_minutes_from_time(s):
+    hours = 0
+    hours += ord(s[0]) - ord('0')
+    hours *= 10
+    hours += ord(s[1]) - ord('0')
+    minutes = 0
+    minutes += ord(s[3]) - ord('0')
+    minutes *= 10
+    minutes += ord(s[4]) - ord('0')
+    return (hours,minutes)

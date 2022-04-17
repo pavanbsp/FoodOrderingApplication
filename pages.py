@@ -65,7 +65,7 @@ def login_page(parent_window = None, db = None):
 
     register_button = Button(login_frame, text="Register", command=register_clicked, font = ("Ariel 15 bold"))
     register_button.place(x = window_width//30,y = 7*window_height//20,height = window_height//15,width = 2*window_width//5-35)
-    login_as_page('yashladani@gmail.com',root,db)
+    #login_as_page('yashladani@gmail.com',root,db)
     root.mainloop()
 
 def register_page(parent_window = None, db = None):
@@ -243,16 +243,16 @@ def add_restaurant_page(manager, parent_window = None, db = None):
     areas = db.get_areas_in_city(cities[0])
     area_clicked.set(areas[0])
 
-    frame.place(x=window_width//15, y=(window_height//6), height = 2*window_height//3, width = 4*window_width//7)
+    frame.place(x=window_width//15, y=(window_height//6), height = 540, width = 4*window_width//7)
 
 
     name_label = Label(frame, text="Restaurant name", font = ("Goudy old style",17,"bold"),fg="grey",bg="white")
     name_entry = Entry(frame,font=("times new roman",15),bg="lightgray")
     name_entry.focus()
     opening_label = Label(frame, text="Opening time", font=("Goudy old style", 17, "bold"), fg="grey", bg="white")
-    opening_entry = Entry(frame, font=("times new roman", 15), bg="lightgray")
+    opening_entry = Entry(frame, font=("times new roman", 15), bg="lightgray", textvariable = StringVar(root,"09:00"))
     closing_label = Label(frame, text="Closing time", font=("Goudy old style", 17, "bold"), fg="grey", bg="white")
-    closing_entry = Entry(frame, font=("times new roman", 15), bg="lightgray")
+    closing_entry = Entry(frame, font=("times new roman", 15), bg="lightgray", textvariable = StringVar(root,"22:30"))
     city_label = Label(frame, text="City", font=("Goudy old style", 17, "bold"), fg="grey", bg="white")
     city_entry = OptionMenu(frame, city_clicked, *cities)
     area_label = Label(frame, text="Area", font=("Goudy old style", 17, "bold"), fg="grey", bg="white")
@@ -261,6 +261,8 @@ def add_restaurant_page(manager, parent_window = None, db = None):
     address_entry = Entry(frame, font=("times new roman", 15), bg="lightgray")
     phone_label = Label(frame, text="Phone", font=("Goudy old style", 17, "bold"), fg="grey", bg="white")
     phone_entry = Entry(frame, font=("times new roman", 15), bg="lightgray")
+    note_msg = "Note: Enter the time in HH:MM format. For example, 4 hours 20 minutes can be entered as 04:20."
+    note_label = Label(frame, text = note_msg, font = ("Goudy old style", 12), fg = "grey", bg = "white")
 
     def check(event):
         nonlocal areas
@@ -289,9 +291,61 @@ def add_restaurant_page(manager, parent_window = None, db = None):
     address_entry.place(y=300, x=240, width=350, height=30)
     phone_label.place(y=360, x=40)
     phone_entry.place(y=360, x=240, width=350, height=30)
+    note_label.place(y = 480,x = 40)
 
     def register_clicked():
-        a = 1
+        open = opening_entry.get()
+        close = closing_entry.get()
+        phone = phone_entry.get()
+        name = name_entry.get()
+        address = address_entry.get()
+        msg = ""
+        if(len(open)!=5 or len(close)!=5 or open[2] != ':' or close[2] != ':'):
+            msg = "Please enter a valid time"
+        (open_hours,open_minutes,close_hours,close_minutes) = (None,None,None,None)
+        if msg == "" and ((not is_numeric(open[0:2]) )or (not is_numeric(close[0:2])) or (not is_numeric(open[3:5])) or (not is_numeric(close[3:5]))):
+            msg = "Please enter a valid time"
+        if len(msg) == 0:
+            (open_hours,open_minutes) = get_hours_minutes_from_time(open)
+            (close_hours,close_minutes) = get_hours_minutes_from_time(close)
+        if msg == "" and max(open_hours,close_hours) > 23:
+            msg = "Please enter a valid time"
+        if msg == "" and max(open_minutes, close_minutes) > 59:
+            msg = "Please enter a valid time"
+        if msg == "" and ((not is_numeric(phone)) or len(phone) != 10):
+            msg = "Please enter a valid phone number"
+        if msg == "" and len(name) < 4:
+            msg = "Restaurant name must contain at least 4 characters"
+        if msg == "" and len(address) < 10:
+            msg = "Address field must contain at least 10 characters"
+
+        if len(msg) != 0:
+            showinfo(
+                title = "Error",
+                message = msg
+            )
+            return
+
+        result = db.insert_restaurant(manager.email,name,open,close,address,area_clicked.get(),city_clicked.get(),phone)
+
+        if result == 1:
+            msg = "There exists a restaurant with the same name and in the same area."
+        elif result == 2:
+            msg = "The given phone number already exists."
+
+        if len(msg) != 0:
+            showinfo(
+                title = "Error",
+                message = msg
+            )
+            return
+
+        msg = "Restaurant successfully added."
+        showinfo(
+            title = "Success",
+            message = msg
+        )
+        manager_home_page(manager,root,db)
 
     def cancel_clicked():
         manager_home_page(manager, root, db)

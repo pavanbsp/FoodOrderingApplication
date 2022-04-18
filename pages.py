@@ -185,7 +185,10 @@ def login_as_page(email, parent_window = None,db = None):
     root.resizable(False,False)
 
     def login_as_customer_clicked():
-        a = 1
+        details = db.get_user_details(email)
+        customer = User(email, details[0], details[1], details[2])
+        customer_home_page(customer, root, db)
+
     def login_as_manager_clicked():
 
         details = db.get_user_details(email)
@@ -365,7 +368,6 @@ def add_restaurant_page(manager, parent_window = None, db = None):
 
     root.mainloop()
 
-
 def manager_home_page(manager, parent_window = None, db = None):
     if db == None:
         db = DataBase()
@@ -453,16 +455,32 @@ def manage_restaurant_page(restaurant,parent_window = None,db = None):
     background_image_label.image = background_image
     background_image_label.place(x=0, y=0)
 
-
     data = db.get_food_items(restaurant.id)
     restaurant.foodItems = []
     for x in data:
         new_food_item = FoodItem(x[0],x[1],x[2],x[3],x[5],convert_string_to_bool(x[4]))
         restaurant.addFoodItem(new_food_item)
 
-    def info_clicked(str_ind):
-        showinfo(title='information', message=restaurant.foodItems[int(str_ind)].description)
+    def info_clicked(event):
+        x = root.winfo_pointerx()
+        y = root.winfo_pointery()
+        ind = ((y-50)//250)*2 - 2
+        if x > 540:
+            ind += 1
+        showinfo(
+            title='Information',
+            message=restaurant.foodItems[ind].description
+        )
 
+    def edit_clicked(event):
+        x = root.winfo_pointerx()
+        y = root.winfo_pointery()
+        ind = ((y-50)//250)*2 - 2
+        if x > 540:
+            ind += 1
+
+    scrollbar = ttk.Scrollbar(root, orient = 'vertical')
+    scrollbar.grid(row=0, column=1,sticky='ns')
     frames = []
     info_buttons = []
     for i in range(len(restaurant.foodItems)):
@@ -498,8 +516,8 @@ def manage_restaurant_page(restaurant,parent_window = None,db = None):
         availability_value.place(x=140, y=70, width = 400)
         price_label.place(x=20, y=110)
         price_value.place(x=140, y=110, width = 400)
-        manage_button = Button(new_frame, text="Manage", command=lambda: add_food_item_page(restaurant,root, db), font=("Ariel 15 bold"))
-        manage_button.place(x=20, y=160, height=40,
+        edit_button = Button(new_frame, text="Manage", command=lambda: add_food_item_page(restaurant,root, db), font=("Ariel 15 bold"))
+        edit_button.place(x=20, y=160, height=40,
                         width=170)
 
         index_str = str(i)
@@ -511,7 +529,7 @@ def manage_restaurant_page(restaurant,parent_window = None,db = None):
         frames.append(new_frame)
 
     add_food_item_button = Button(root, text="Add Food Item", command=lambda: add_food_item_page(restaurant,root, db), font=("Ariel 15 bold"))
-    add_food_item_button.place(x=24 * window_width // 30, y=18*window_height // 20, height=window_height // 15,
+    add_food_item_button.place(x=24 * window_width // 30, y=3*window_height // 20, height=window_height // 15,
                         width=1*window_width // 5 - 35)
 
     logout_button = Button(root, text="Logout", command=lambda: login_page(root, db), font=("Ariel 15 bold"))
@@ -601,4 +619,210 @@ def add_food_item_page(restaurant, parent_window = None, db = None):
     root.mainloop()
 
 
+
 #def customer_home_page():
+
+
+def add_address(user, parent_window=None, db=None):
+    if db == None:
+        db = DataBase()
+    if (parent_window != None):
+        parent_window.destroy()
+    root = tk.Tk()
+    root.title('Add your address')
+
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+
+    window_width = (2 * screen_width) // 3
+    window_height = (2 * screen_height) // 3
+
+    center_x = int(screen_width / 2 - window_width / 2)
+    center_y = int(screen_height / 2 - window_height / 2)
+
+    root.geometry(f'{window_width}x{window_height}+{center_x}+{center_y}')
+
+    root.iconbitmap('Images/logo.ico')
+    root.resizable(False, False)
+    background_image = ImageTk.PhotoImage(
+        Image.open('Images/address.jpg').resize((window_width + 100, window_height), Image.ANTIALIAS))
+    background_image_label = tk.Label(root, image=background_image)
+    background_image_label.image = background_image
+    background_image_label.place(x=0, y=0)
+
+    cities = db.get_all_cities()
+
+    frame = Frame(root, bg="white")
+
+    city_clicked = StringVar()
+    area_clicked = StringVar()
+
+    city_clicked.set(cities[0])
+    areas = db.get_areas_in_city(cities[0])
+    area_clicked.set(areas[0])
+
+    frame.place(x=window_width // 15, y=(window_height // 6), height=350, width=4 * window_width // 7)
+
+    city_label = Label(frame, text="City", font=("Goudy old style", 17, "bold"), fg="grey", bg="white")
+    city_entry = OptionMenu(frame, city_clicked, *cities)
+    area_label = Label(frame, text="Area", font=("Goudy old style", 17, "bold"), fg="grey", bg="white")
+    area_entry = OptionMenu(frame, area_clicked, *areas)
+    address_label = Label(frame, text="Address", font=("Goudy old style", 17, "bold"), fg="grey", bg="white")
+    address_entry = Text(frame, font=("times new roman", 15), bg="lightgray")
+
+    def check(event):
+        nonlocal areas
+        nonlocal area_entry
+        nonlocal area_clicked
+        areas = db.get_areas_in_city(city_clicked.get())
+        if area_clicked.get() not in areas:
+            area_clicked.set(areas[0])
+        area_entry = OptionMenu(frame, area_clicked, *areas)
+        area_entry.place(y=120, x=140, width=250, height=30)
+        area_entry.bind('<Enter>', check)
+
+    area_entry.bind('<Enter>', check)
+
+    city_label.place(y=50, x=40)
+    city_entry.place(y=50, x=140, width=250, height=30)
+    area_label.place(y=120, x=40)
+    area_entry.place(y=120, x=140, width=250, height=30)
+    address_label.place(y=190, x=40)
+    address_entry.place(y=190, x=140, width=250, height=50)
+
+    def register_clicked():
+        address = address_entry.get('1.0', 'end')
+        msg = ""
+        if msg == "" and len(address) < 10:
+            msg = "Address field must contain at least 10 characters"
+
+        if len(msg) != 0:
+            showinfo(
+                title="Error",
+                message=msg
+            )
+            return
+
+        result = db.update_user_area(user.email, address, area_clicked.get(), city_clicked.get())
+
+        if result == 1:
+            msg = "Area updated succesfully"
+
+        if len(msg) != 0:
+            showinfo(
+                title="Success",
+                message=msg
+            )
+            return
+
+        msg = "There is some error while updating address."
+        showinfo(
+            title="Error",
+            message=msg
+        )
+        customer_home_page(user, root, db)
+
+    register_button = Button(frame, text="Update address", command=register_clicked, font=("Ariel 12 bold"))
+    register_button.place(x=150, y=260, height=40, width=150)
+
+    logout_button = Button(root, text="Logout", command=lambda: login_page(root, db), font=("Ariel 15 bold"))
+    logout_button.place(x=700, y=20)
+
+    root.mainloop()
+
+
+def customer_home_page(user, parent_window=None, db=None):
+    if db == None:
+        db = DataBase()
+    if (parent_window != None):
+        parent_window.destroy()
+    root = tk.Tk()
+
+    if (user.area_id == None):
+        add_address(user, root, db)
+
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+
+    window_width = (6*screen_width)//7
+    window_height = (6*screen_height)//7
+
+    center_x = int(screen_width/2-window_width/2)
+    center_y = int(screen_height/2-window_height/2)
+
+    root.geometry(f'{window_width}x{window_height}+{center_x}+{center_y}')
+
+    root.iconbitmap('Images/logo.ico')
+    root.resizable(False, False)
+    background_image = ImageTk.PhotoImage(
+        Image.open('Images/manager_home_page_background.jpg').resize((window_width + 100, window_height), Image.ANTIALIAS))
+    background_image_label = tk.Label(root, image=background_image)
+    background_image_label.image = background_image
+    background_image_label.place(x=0, y=0)
+
+    cities = db.get_all_cities()
+
+    frame = Frame(root, bg="white")
+
+    city_clicked = StringVar()
+    area_clicked = StringVar()
+
+    city_clicked.set(cities[0])
+    areas = db.get_areas_in_city(cities[0])
+    area_clicked.set(areas[0])
+
+    frame.place(x=window_width//15, y=(window_height//6), height = 540, width = 4*window_width//7)
+
+
+    name_label = Label(frame, text="Restaurant name", font = ("Goudy old style",17,"bold"),fg="grey",bg="white")
+    name_entry = Entry(frame,font=("times new roman",15),bg="lightgray")
+    name_entry.focus()
+    opening_label = Label(frame, text="Opening time", font=("Goudy old style", 17, "bold"), fg="grey", bg="white")
+    opening_entry = Entry(frame, font=("times new roman", 15), bg="lightgray", textvariable = StringVar(root,"09:00"))
+    closing_label = Label(frame, text="Closing time", font=("Goudy old style", 17, "bold"), fg="grey", bg="white")
+    closing_entry = Entry(frame, font=("times new roman", 15), bg="lightgray", textvariable = StringVar(root,"22:30"))
+    city_label = Label(frame, text="City", font=("Goudy old style", 17, "bold"), fg="grey", bg="white")
+    city_entry = OptionMenu(frame, city_clicked, *cities)
+    area_label = Label(frame, text="Area", font=("Goudy old style", 17, "bold"), fg="grey", bg="white")
+    area_entry = OptionMenu(frame, area_clicked, *areas)
+    address_label = Label(frame, text="Address", font=("Goudy old style", 17, "bold"), fg="grey", bg="white")
+    address_entry = Entry(frame, font=("times new roman", 15), bg="lightgray")
+    phone_label = Label(frame, text="Phone", font=("Goudy old style", 17, "bold"), fg="grey", bg="white")
+    phone_entry = Entry(frame, font=("times new roman", 15), bg="lightgray")
+    note_msg = "Note: Enter the time in HH:MM format. For example, 4 hours 20 minutes can be entered as 04:20."
+    note_label = Label(frame, text = note_msg, font = ("Goudy old style", 12), fg = "grey", bg = "white")
+
+    def check(event):
+        nonlocal areas
+        nonlocal area_entry
+        nonlocal area_clicked
+        areas = db.get_areas_in_city(city_clicked.get())
+        if area_clicked.get() not in areas:
+            area_clicked.set(areas[0])
+        area_entry = OptionMenu(frame, area_clicked, *areas)
+        area_entry.place(y=240, x=240, width=350, height=30)
+        area_entry.bind('<Enter>', check)
+
+    area_entry.bind('<Enter>', check)
+
+    name_label.place(y = 60,x=40)
+    name_entry.place(y = 60,x=240,width = 350, height = 30)
+    opening_label.place(y = 120,x= 40)
+    opening_entry.place(y = 120,x=190,width = 150,height = 30)
+    closing_label.place(y = 120,x=360)
+    closing_entry.place(y=120, x=510, width=150,height = 30)
+    city_label.place(y=180, x=40)
+    city_entry.place(y=180, x=240, width=350, height=30)
+    area_label.place(y=240,x=40)
+    area_entry.place(y=240,x=240,width=350,height=30)
+    address_label.place(y=300, x=40)
+    address_entry.place(y=300, x=240, width=350, height=30)
+    phone_label.place(y=360, x=40)
+    phone_entry.place(y=360, x=240, width=350, height=30)
+    note_label.place(y=480,x=40)
+
+    logout_button = Button(root, text="Logout", command=lambda: login_page(root,db), font=("Ariel 15 bold"))
+    logout_button.place(x=24*window_width // 30, y=window_height // 20, height=window_height // 15,
+                          width=1 * window_width // 5 - 35)
+
+    root.mainloop()

@@ -152,6 +152,29 @@ class DataBase:
         cursor.execute("INSERT into restaurants (restaurant_id,manager_email,name,opening_time,closing_time,address,area_id,phone,flag) values ('{0}','{1}','{2}','{3}','{4}','{5}','{6}','{7}','False')".format(id,manager_email,name,opening_time,closing_time,address,area_id,phone))
         self.database.commit()
 
+    def update_user_area(self, email, address, area, city):
+
+        cursor = self.database.cursor()
+
+        cursor.execute("select area_id from areas where city = '{0}' and name = '{1}'".format(city, area))
+
+        data = cursor.fetchall()
+
+        area_id = data[0][0]
+
+        print(area_id)
+
+        print(email, address, area, city)
+
+        cursor.execute(
+            "update users set address = '" + address + "', area_id = '" + area_id + "' where email = '" + email + "'")
+
+        self.database.commit()
+
+        cursor.close()
+
+        return 1
+
     def insert_food_item(self,restaurant_id,name,description,price):
         cursor = self.database.cursor()
         id = ""

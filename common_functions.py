@@ -31,3 +31,9 @@ def convert_string_to_bool(s):
         return True
     else:
         return False
+
+'''
+To-add
+make text boxes scrollable to be able to manage more data
+
+'''

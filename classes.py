@@ -1,9 +1,9 @@
 class FoodItem:
-    def __init__(self, food_id, restaurant_id, name, details, price, availability=False):
+    def __init__(self, food_id, restaurant_id, name, description, price, availability=False):
         self.food_id = food_id
         self.restaurant_id = restaurant_id
         self.name = name
-        self.details = details
+        self.description = description
         self.price = price
         self.availability = False
     def updateFoodItem(self, price):

@@ -453,15 +453,62 @@ def manage_restaurant_page(restaurant,parent_window = None,db = None):
     background_image_label.image = background_image
     background_image_label.place(x=0, y=0)
 
+
     data = db.get_food_items(restaurant.id)
+    restaurant.foodItems = []
     for x in data:
-        restaurant.addFoodItem(FoodItem(x[0],x[1],x[2],x[3],x[5],convert_string_to_bool(x[4])))
+        new_food_item = FoodItem(x[0],x[1],x[2],x[3],x[5],convert_string_to_bool(x[4]))
+        restaurant.addFoodItem(new_food_item)
+
+    def info_clicked(str_ind):
+        showinfo(title='information', message=restaurant.foodItems[int(str_ind)].description)
 
     frames = []
+    info_buttons = []
     for i in range(len(restaurant.foodItems)):
-        new_frame = Frame(root, bg="grey")
-        new_frame.place(x=200, y=50+i*(200), height=180, width=600)
-        
+        yval = 50 + (i//2)*250
+        xval = 60 + (i%2)*480
+        new_frame = Frame(root, bg="white")
+        new_frame.place(x=xval, y=yval, height=230, width=440)
+
+        def convert_availability_to_string(val):
+            if val:
+                return "Available"
+            else:
+                return "Not available"
+
+        entry_frame = Frame(new_frame, bg = "white")
+        entry_frame.place(x = 0,y = 0, height = 150,width = 400)
+
+        name_label = Label(entry_frame, text="Name: ", font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
+        name_value = Text(entry_frame, font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
+        name_value.insert('1.0',restaurant.foodItems[i].name)
+        name_value['state'] = 'disabled'
+        availability_label = Label(entry_frame, text="Availability: ", font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
+        availability_value = Text(entry_frame, font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
+        availability_value.insert('1.0',convert_availability_to_string(restaurant.foodItems[i].availability))
+        availability_value['state'] = 'disabled'
+        price_label = Label(entry_frame, text= "Price: ", font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
+        price_value = Text(entry_frame, font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
+        price_value.insert('1.0',str(restaurant.foodItems[i].price))
+        price_value['state'] = 'disabled'
+        name_label.place(x=20,y=30,)
+        name_value.place(x=140,y=30,width = 400)
+        availability_label.place(x=20, y=70)
+        availability_value.place(x=140, y=70, width = 400)
+        price_label.place(x=20, y=110)
+        price_value.place(x=140, y=110, width = 400)
+        manage_button = Button(new_frame, text="Manage", command=lambda: add_food_item_page(restaurant,root, db), font=("Ariel 15 bold"))
+        manage_button.place(x=20, y=160, height=40,
+                        width=170)
+
+        index_str = str(i)
+        info_buttons.append(Button(new_frame, text="More info", command=lambda : info_clicked(index_str),
+                               font=("Ariel 15 bold")))
+        info_buttons[i].place(x=210, y=160, height=40,
+                            width=170)
+
+        frames.append(new_frame)
 
     add_food_item_button = Button(root, text="Add Food Item", command=lambda: add_food_item_page(restaurant,root, db), font=("Ariel 15 bold"))
     add_food_item_button.place(x=24 * window_width // 30, y=18*window_height // 20, height=window_height // 15,
@@ -533,7 +580,6 @@ def add_food_item_page(restaurant, parent_window = None, db = None):
             message='Food item successfully added to the restaurant menu'
         )
         manage_restaurant_page(restaurant,root,db)
-
 
     add_button = Button(frame, text="Add Food Item", command=add_clicked, font=("Ariel 15 bold"))
     add_button.place(x=40, y=280, height=40, width=250)

@@ -449,54 +449,53 @@ def manage_restaurant_page(restaurant,parent_window = None,db = None):
 
     root.iconbitmap('Images/logo.ico')
     root.resizable(False, False)
-    background_image = ImageTk.PhotoImage(
-        Image.open('Images/manager_home_page_background.jpg').resize((window_width + 100, window_height), Image.ANTIALIAS))
-    background_image_label = tk.Label(root, image=background_image)
-    background_image_label.image = background_image
-    background_image_label.place(x=0, y=0)
 
     data = db.get_food_items(restaurant.id)
     restaurant.foodItems = []
+
     for x in data:
-        new_food_item = FoodItem(x[0],x[1],x[2],x[3],x[5],convert_string_to_bool(x[4]))
+        new_food_item = FoodItem(x[0], x[1], x[2], x[3], x[5], convert_string_to_bool(x[4]))
         restaurant.addFoodItem(new_food_item)
 
-    def info_clicked(event):
-        x = root.winfo_pointerx()
-        y = root.winfo_pointery()
-        ind = ((y-50)//250)*2 - 2
-        if x > 540:
-            ind += 1
-        showinfo(
-            title='Information',
-            message=restaurant.foodItems[ind].description
-        )
+    main_frame = Frame(root)
+    main_frame.pack(fill=BOTH, expand=1)
 
-    def edit_clicked(event):
-        x = root.winfo_pointerx()
-        y = root.winfo_pointery()
-        ind = ((y-50)//250)*2 - 2
-        if x > 540:
-            ind += 1
+    my_canvas = Canvas(main_frame)
+    my_canvas.pack(side=LEFT, fill=BOTH, expand=1)
 
-    scrollbar = ttk.Scrollbar(root, orient = 'vertical')
-    scrollbar.grid(row=0, column=1,sticky='ns')
+    scrollbar = ttk.Scrollbar(main_frame, orient=VERTICAL, command=my_canvas.yview)
+    scrollbar.pack(side=RIGHT, fill=Y)
+
+    my_canvas.configure(yscrollcommand=scrollbar.set)
+    my_canvas.bind('<Configure>', lambda e: my_canvas.config(scrollregion=my_canvas.bbox(ALL)))
+
+    second_frame = Frame(my_canvas)
+
+    my_canvas.create_window((0, 0), window=second_frame, anchor="nw")
+
+    #background_image = ImageTk.PhotoImage(
+     #   Image.open('Images/manager_home_page_background.jpg').resize((window_width + 100, window_height),
+      #                                                               Image.ANTIALIAS))
+    #background_image_label = tk.Label(main_frame, image=background_image)
+    #background_image_label.image = background_image
+    #background_image_label.place(x=0, y=0)
+
+    for thing in range(100):
+        Button(second_frame, height=0, width=0, text=f"Button  {thing}").grid(row=5, column=thing, pady=10, padx=10)
+
+    for thing in range(100):
+        Button(second_frame, height=0, width=0, text=f"Button  {thing}").grid(row=thing, column=5, pady=10, padx=10)
+
     frames = []
     info_buttons = []
     for i in range(len(restaurant.foodItems)):
         yval = 50 + (i//2)*250
-        xval = 60 + (i%2)*480
-        new_frame = Frame(root, bg="white")
+        xval = 60 + (i % 2)*480
+        new_frame = Frame(second_frame, bg="white")
         new_frame.place(x=xval, y=yval, height=230, width=440)
 
-        def convert_availability_to_string(val):
-            if val:
-                return "Available"
-            else:
-                return "Not available"
-
-        entry_frame = Frame(new_frame, bg = "white")
-        entry_frame.place(x = 0,y = 0, height = 150,width = 400)
+        entry_frame = Frame(new_frame, bg="white")
+        entry_frame.place(x=0, y=0, height=150, width=400)
 
         name_label = Label(entry_frame, text="Name: ", font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
         name_value = Text(entry_frame, font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
@@ -504,37 +503,153 @@ def manage_restaurant_page(restaurant,parent_window = None,db = None):
         name_value['state'] = 'disabled'
         availability_label = Label(entry_frame, text="Availability: ", font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
         availability_value = Text(entry_frame, font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
-        availability_value.insert('1.0',convert_availability_to_string(restaurant.foodItems[i].availability))
+        availability_value.insert('1.0', convert_availability_to_string(restaurant.foodItems[i].availability))
         availability_value['state'] = 'disabled'
-        price_label = Label(entry_frame, text= "Price: ", font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
+        price_label = Label(entry_frame, text="Price: ", font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
         price_value = Text(entry_frame, font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
-        price_value.insert('1.0',str(restaurant.foodItems[i].price))
+        price_value.insert('1.0', str(restaurant.foodItems[i].price))
         price_value['state'] = 'disabled'
-        name_label.place(x=20,y=30,)
-        name_value.place(x=140,y=30,width = 400)
+        name_label.place(x=20, y=30)
+        name_value.place(x=140, y=30, width=400)
         availability_label.place(x=20, y=70)
-        availability_value.place(x=140, y=70, width = 400)
+        availability_value.place(x=140, y=70, width=400)
         price_label.place(x=20, y=110)
-        price_value.place(x=140, y=110, width = 400)
-        edit_button = Button(new_frame, text="Manage", command=lambda: add_food_item_page(restaurant,root, db), font=("Ariel 15 bold"))
-        edit_button.place(x=20, y=160, height=40,
-                        width=170)
+        price_value.place(x=140, y=110, width=400)
+
+        def info_clicked():
+            x = root.winfo_pointerx()
+            y = root.winfo_pointery()
+            ind = ((y - 50) // 250) * 2 - 2
+            if x > 540:
+                ind += 1
+            showinfo(
+                title='Information',
+                message=restaurant.foodItems[ind].description
+            )
+
+        def edit_clicked():
+            x = root.winfo_pointerx()
+            y = root.winfo_pointery()
+            ind = ((y - 50) // 250) * 2 - 2
+            if x > 540:
+                ind += 1
+            manage_food_item(restaurant, restaurant.foodItems[ind], root, db)
+
+        edit_button = Button(new_frame, text="Edit", command=edit_clicked, font=("Ariel 15 bold"))
+        edit_button.place(x=20, y=160, height=40, width=170)
 
         index_str = str(i)
-        info_buttons.append(Button(new_frame, text="More info", command=lambda : info_clicked(index_str),
+        info_buttons.append(Button(new_frame, text="More info", command=info_clicked,
                                font=("Ariel 15 bold")))
         info_buttons[i].place(x=210, y=160, height=40,
                             width=170)
 
         frames.append(new_frame)
 
-    add_food_item_button = Button(root, text="Add Food Item", command=lambda: add_food_item_page(restaurant,root, db), font=("Ariel 15 bold"))
+    add_food_item_button = Button(second_frame, text="Add Food Item", command=lambda: add_food_item_page(restaurant,root, db), font=("Ariel 15 bold"))
     add_food_item_button.place(x=24 * window_width // 30, y=3*window_height // 20, height=window_height // 15,
                         width=1*window_width // 5 - 35)
 
-    logout_button = Button(root, text="Logout", command=lambda: login_page(root, db), font=("Ariel 15 bold"))
+    logout_button = Button(second_frame, text="Logout", command=lambda: login_page(root, db), font=("Ariel 15 bold"))
     logout_button.place(x=24 * window_width // 30, y=window_height // 20, height=window_height // 15,
-                        width=1 * window_width // 5 - 35)
+                        width=1*window_width // 5 - 35)
+
+    root.mainloop()
+
+def manage_food_item(restaurant, fooditem, parent_window, db):
+    if db == None:
+        db = DataBase()
+    if(parent_window != None):
+        parent_window.destroy()
+    root = tk.Tk()
+    root.title('Manage food item')
+
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+
+    window_width = (6*screen_width)//7
+    window_height = (6*screen_height)//7
+
+    center_x = int(screen_width/2-window_width/2)
+    center_y = int(screen_height/2-window_height/2)
+
+    root.geometry(f'{window_width}x{window_height}+{center_x}+{center_y}')
+
+    root.iconbitmap('Images/logo.ico')
+    root.resizable(False, False)
+    background_image = ImageTk.PhotoImage(
+        Image.open('Images/manager_home_page_background.jpg').resize((window_width + 100, window_height), Image.ANTIALIAS))
+    background_image_label = tk.Label(root, image=background_image)
+    background_image_label.image = background_image
+    background_image_label.place(x=0, y=0)
+
+    frame = Frame(root, bg="white")
+
+    frame.place(x=window_width//15, y=(window_height//6), height=540, width=4*window_width//7)
+
+    name_label = Label(frame, text="Name", font=("Goudy old style",17,"bold"),fg="grey",bg="white")
+    name_entry = Entry(frame, font=("times new roman", 15), bg="lightgray", textvariable = StringVar(root,fooditem.name))
+    name_entry.focus()
+    description_label = Label(frame, text="Address", font=("Goudy old style", 17, "bold"), fg="grey", bg="white")
+    description_entry = Text(frame, font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
+    description_entry.insert('1.0', fooditem.description)
+    price_label = Label(frame, text="Name", font=("Goudy old style", 17, "bold"), fg="grey", bg="white")
+    price_entry = Entry(frame, font=("times new roman", 15), bg="lightgray", textvariable = StringVar(root,str(fooditem.price)))
+    availability_label = Label(frame, text="Availability", font=("Goudy old style", 17, "bold"), fg="grey", bg="white")
+    availability_value = Label(frame, text=convert_availability_to_string(fooditem.availability), font=("Goudy old style", 17, "bold"), fg="grey", bg="white")
+
+    def ok_clicked():
+        name = name_entry.get()
+        price = price_entry.get()
+        msg = ""
+        if len(name) < 4:
+            msg = "Food item name should contain at least 4 characters"
+        if msg == "" and (not is_double(price)):
+            msg = "Enter a valid price"
+
+        if msg != "":
+            showinfo(
+                title='Error',
+                message=msg
+            )
+            return
+        db.edit_food_item(fooditem.food_id, name , description_entry.get('1.0', 'end'), price)
+        showinfo(
+            title='Success',
+            message='Food item got successfully updated'
+        )
+        manage_restaurant_page(restaurant, root, db)
+
+    ok_button = Button(frame, text="OK", command=ok_clicked, font=("Ariel 15 bold"))
+    ok_button.place(x=40, y=420, height=40, width=250)
+
+    def cancel_clicked():
+        manage_restaurant_page(restaurant, root, db)
+
+    def switch_availability_clicked():
+        fooditem.availability = not fooditem.availability
+        db.switch_availability(fooditem.food_id, str(fooditem.availability))
+        for i in range(len(restaurant.foodItems)):
+            if restaurant.foodItems[i].food_id == fooditem.food_id:
+                restaurant.foodItems[i].availability = fooditem.availability
+        manage_food_item(restaurant, fooditem, root, db)
+
+    name_label.place(y=60, x=40)
+    name_entry.place(y=60, x=240, width=350, height=30)
+    description_label.place(y=120, x=40)
+    description_entry.place(y=120, x=240, width=450, height=90)
+    price_label.place(y=240, x=40)
+    price_entry.place(y=240, x=240, width=350, height=30)
+    availability_label.place(y=300, x=40)
+    availability_value.place(y=300, x=240)
+
+    switch_availability_button = Button(frame, text="Switch availability", command=switch_availability_clicked, font = ("Ariel 15 bold"))
+    switch_availability_button.place(x=40, y=360, width=250)
+    cancel_button = Button(frame, text="Cancel", command=cancel_clicked, font = ("Ariel 15 bold"))
+    cancel_button.place(x=340, y=420, height=40, width=250)
+
+    logout_button = Button(root, text="Logout", command=lambda: login_page(root, db), font=("Ariel 15 bold"))
+    logout_button.place(x=24*window_width // 30, y=window_height // 20, height=window_height // 15, width=1 * window_width // 5 - 35)
 
     root.mainloop()
 
@@ -583,7 +698,7 @@ def add_food_item_page(restaurant, parent_window = None, db = None):
         msg = ""
         if len(name) < 4:
             msg = "Food item name should contain at least 4 characters"
-        if msg == "" and (not is_numeric(price)):
+        if msg == "" and (not is_double(price)):
             msg = "Enter a valid price"
 
         if msg != "":
@@ -592,12 +707,12 @@ def add_food_item_page(restaurant, parent_window = None, db = None):
                 message=msg
             )
             return
-        db.insert_food_item(restaurant.id,name,description_entry.get('1.0','end'),price)
+        db.insert_food_item(restaurant.id, name, description_entry.get('1.0', 'end'), price)
         showinfo(
             title='Success',
             message='Food item successfully added to the restaurant menu'
         )
-        manage_restaurant_page(restaurant,root,db)
+        manage_restaurant_page(restaurant, root, db)
 
     add_button = Button(frame, text="Add Food Item", command=add_clicked, font=("Ariel 15 bold"))
     add_button.place(x=40, y=280, height=40, width=250)
@@ -618,10 +733,7 @@ def add_food_item_page(restaurant, parent_window = None, db = None):
 
     root.mainloop()
 
-
-
 #def customer_home_page():
-
 
 def add_address(user, parent_window=None, db=None):
     if db == None:
@@ -729,7 +841,6 @@ def add_address(user, parent_window=None, db=None):
     logout_button.place(x=700, y=20)
 
     root.mainloop()
-
 
 def customer_home_page(user, parent_window=None, db=None):
     if db == None:

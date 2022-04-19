@@ -15,6 +15,19 @@ def is_numeric(s):
         return False
     return True
 
+def is_double(s):
+    fl = False
+    for x in s:
+        if ((ord(x)) >= ord('0') and ord(x)<=ord('9')):
+            continue
+        elif x == '.':
+            if fl or s[-1] == '.':
+                return False
+            fl = True
+            continue
+        return False
+    return True
+
 def get_hours_minutes_from_time(s):
     hours = 0
     hours += ord(s[0]) - ord('0')
@@ -31,6 +44,12 @@ def convert_string_to_bool(s):
         return True
     else:
         return False
+
+def convert_availability_to_string(val):
+    if val:
+        return "Available"
+    else:
+        return "Not available"
 
 '''
 To-add

@@ -5,7 +5,7 @@ class FoodItem:
         self.name = name
         self.description = description
         self.price = price
-        self.availability = False
+        self.availability = availability
     def updateFoodItem(self, price):
         self.price = price
     def switchAvailability(self):

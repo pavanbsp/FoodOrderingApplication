@@ -188,3 +188,14 @@ class DataBase:
         cursor.execute("select * from food_items where restaurant_id = '{0}'".format(restaurant_id))
         data = cursor.fetchall()
         return data
+
+    def switch_availability(self, food_id, value):
+        cursor = self.database.cursor()
+        cursor.execute("UPDATE food_items SET availability = '{0}' where food_id = '{1}'".format(value, food_id))
+        self.database.commit()
+
+    def edit_food_item(self, id, name, description, price):
+        cursor = self.database.cursor()
+        cursor.execute("UPDATE food_items SET name = '{0}', description = '{1}', price = {2} where food_id = '{3}'".format(name, description, price, id))
+        self.database.commit()
+

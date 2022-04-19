@@ -12,11 +12,12 @@ class FoodItem:
         self.availability = not self.availability
 
 class User:
-    def __init__(self, email, name, contact, area_id = None):
+    def __init__(self, email, name, contact, address = None, area_id = None):
         self.email = email
         self.name = name
         self.contact = contact
         self.area_id = area_id
+        self.address = address
 
 class Manager(User):
     def __init__(self, email, name, contact, area_id = None, restaurant = None):

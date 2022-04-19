@@ -152,29 +152,6 @@ class DataBase:
         cursor.execute("INSERT into restaurants (restaurant_id,manager_email,name,opening_time,closing_time,address,area_id,phone,flag) values ('{0}','{1}','{2}','{3}','{4}','{5}','{6}','{7}','False')".format(id,manager_email,name,opening_time,closing_time,address,area_id,phone))
         self.database.commit()
 
-    def update_user_area(self, email, address, area, city):
-
-        cursor = self.database.cursor()
-
-        cursor.execute("select area_id from areas where city = '{0}' and name = '{1}'".format(city, area))
-
-        data = cursor.fetchall()
-
-        area_id = data[0][0]
-
-        print(area_id)
-
-        print(email, address, area, city)
-
-        cursor.execute(
-            "update users set address = '" + address + "', area_id = '" + area_id + "' where email = '" + email + "'")
-
-        self.database.commit()
-
-        cursor.close()
-
-        return 1
-
     def insert_food_item(self,restaurant_id,name,description,price):
         cursor = self.database.cursor()
         id = ""
@@ -194,8 +171,46 @@ class DataBase:
         cursor.execute("UPDATE food_items SET availability = '{0}' where food_id = '{1}'".format(value, food_id))
         self.database.commit()
 
-    def edit_food_item(self, id, name, description, price):
+    def edit_food_item(self, id, name, description, price, availability):
         cursor = self.database.cursor()
-        cursor.execute("UPDATE food_items SET name = '{0}', description = '{1}', price = {2} where food_id = '{3}'".format(name, description, price, id))
+        cursor.execute("UPDATE food_items SET name = '{0}', description = '{1}', price = {2}, availability = '{3}' where food_id = '{4}'".format(name, description, price, availability, id))
         self.database.commit()
 
+    def update_user_area(self, email, address, area, city):
+        cursor = self.database.cursor()
+
+        cursor.execute("select area_id from areas where city = '{0}' and name = '{1}'".format(city, area))
+        data = cursor.fetchall()
+        area_id = data[0][0]
+
+        cursor.execute(
+            "update users set address = '" + address + "', area_id = '" + area_id + "' where email = '" + email + "'")
+
+        self.database.commit()
+        cursor.close()
+        return 1
+
+    def city_by_areaid(self, areaid):
+        cursor = self.database.cursor()
+        cursor.execute("select city from areas where area_id = '" + areaid + "'")
+        data = cursor.fetchall()
+        return data[0][0]
+
+    def restaurants_by_city(self, area_id):
+        cursor = self.database.cursor()
+        user_city = self.city_by_areaid(area_id)
+        print(user_city)
+        cursor.execute('''select restaurants.name, restaurants.opening_time, restaurants.closing_time, restaurants.address, restaurants.phone,
+                         areas.name from restaurants left outer join areas on restaurants.area_id = areas.area_id''')
+        data = cursor.fetchall()
+        return data
+
+    def update_user_profile(self, email, name, mobile, address, area, city):
+        cursor = self.database.cursor()
+        self.update_user_area(email, address, area, city)
+        print(mobile)
+        cursor.execute(
+            "update users set name = '" + name + "', contact = '" + mobile + "' where email = '" + email + "'")
+        self.database.commit()
+        cursor.close()
+        return 1

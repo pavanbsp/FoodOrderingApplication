@@ -196,21 +196,32 @@ class DataBase:
         data = cursor.fetchall()
         return data[0][0]
 
+    def get_area_by_areaid(self, areaid):
+        cursor = self.database.cursor()
+        cursor.execute("select name from areas where area_id = '{0}'".format(areaid))
+        data = cursor.fetchall()
+        return data[0][0]
+
     def restaurants_by_city(self, area_id):
         cursor = self.database.cursor()
         user_city = self.city_by_areaid(area_id)
-        print(user_city)
-        cursor.execute('''select restaurants.name, restaurants.opening_time, restaurants.closing_time, restaurants.address, restaurants.phone,
-                         areas.name from restaurants left outer join areas on restaurants.area_id = areas.area_id''')
+        cursor.execute("select * from restaurants left outer join areas on restaurants.area_id = areas.area_id where areas.city = '{0}'".format(user_city))
         data = cursor.fetchall()
         return data
 
     def update_user_profile(self, email, name, mobile, address, area, city):
         cursor = self.database.cursor()
         self.update_user_area(email, address, area, city)
-        print(mobile)
         cursor.execute(
             "update users set name = '" + name + "', contact = '" + mobile + "' where email = '" + email + "'")
         self.database.commit()
         cursor.close()
         return 1
+
+    def delete_food_item(self, food_id):
+        cursor = self.database.cursor()
+        cursor.execute("delete from food_items where food_id = '{0}'".format(food_id))
+        self.database.commit()
+        cursor.close()
+
+

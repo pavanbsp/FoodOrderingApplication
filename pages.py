@@ -6,6 +6,7 @@ from PIL import Image, ImageTk
 from tkinter import messagebox
 from MySql_queries import DataBase
 from tkinter.messagebox import showinfo
+from tkinter.messagebox import askyesno
 from common_functions import *
 from classes import *
 
@@ -66,7 +67,7 @@ def login_page(parent_window = None, db = None):
     register_button = Button(login_frame, text="Register", command=register_clicked, font = ("Ariel 15 bold"))
     register_button.place(x = window_width//30,y = 7*window_height//20,height = window_height//15,width = 2*window_width//5-35)
 
-    login_as_page('yaswanthkommineni1611@gmail.com',root,db)
+    login_as_page('customer1@gmail.com',root,db)
     root.mainloop()
 
 def register_page(parent_window = None, db = None):
@@ -538,15 +539,15 @@ def manage_restaurant_page(restaurant,parent_window = None,db = None, page_numbe
         x = root.winfo_pointerx()
         ind = ((x-window_width//2+100)+70)//60
         ind -= 3
-        print(ind)
         manage_restaurant_page(restaurant, root, db, ind)
 
-    for i in range(num_pages):
-        color = "white"
-        if i == page_number:
-            color = "grey"
-        button = Button(root, text=str(i+1), command=page_clicked, font=("Ariel 15 bold"), bg = color)
-        button.place(x=window_width//2+i*60-100, y=window_height-70, height=30, width=50)
+    if num_pages > 1:
+        for i in range(num_pages):
+            color = "white"
+            if i == page_number:
+                color = "grey"
+            button = Button(root, text=str(i+1), command=page_clicked, font=("Ariel 15 bold"), bg = color)
+            button.place(x=window_width//2+i*60-100, y=window_height-70, height=30, width=50)
 
     add_food_item_button = Button(root, text="Add Food Item", command=lambda: add_food_item_page(restaurant,root, db), font=("Ariel 15 bold"))
     add_food_item_button.place(x=24 * window_width // 30, y=3*window_height // 20, height=window_height // 15,
@@ -597,10 +598,10 @@ def manage_food_item(restaurant, fooditem, parent_window, db):
     name_label = Label(frame, text="Name", font=("Goudy old style",17,"bold"),fg="grey",bg="white")
     name_entry = Entry(frame, font=("times new roman", 15), bg="lightgray", textvariable = StringVar(root,fooditem.name))
     name_entry.focus()
-    description_label = Label(frame, text="Address", font=("Goudy old style", 17, "bold"), fg="grey", bg="white")
+    description_label = Label(frame, text="Description", font=("Goudy old style", 17, "bold"), fg="grey", bg="white")
     description_entry = Text(frame, font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
     description_entry.insert('1.0', fooditem.description)
-    price_label = Label(frame, text="Name", font=("Goudy old style", 17, "bold"), fg="grey", bg="white")
+    price_label = Label(frame, text="Price", font=("Goudy old style", 17, "bold"), fg="grey", bg="white")
     price_entry = Entry(frame, font=("times new roman", 15), bg="lightgray", textvariable = StringVar(root,str(fooditem.price)))
     availability_label = Label(frame, text="Availability", font=("Goudy old style", 17, "bold"), fg="grey", bg="white")
     availability_entry = OptionMenu(frame, availability_clicked, *options)
@@ -638,8 +639,12 @@ def manage_food_item(restaurant, fooditem, parent_window, db):
     def cancel_clicked():
         manage_restaurant_page(restaurant, root, db)
 
-    def delete_clicekd():
-        a = 1
+    def delete_clicked():
+        answer = askyesno(title='confirmation',
+                          message='Are you sure that you want to delete this item?')
+        if answer:
+            db.delete_food_item(fooditem.food_id)
+            manage_restaurant_page(restaurant, root, db)
 
     name_label.place(y=60, x=40)
     name_entry.place(y=60, x=240, width=350, height=30)
@@ -656,8 +661,8 @@ def manage_food_item(restaurant, fooditem, parent_window, db):
     logout_button = Button(root, text="Logout", command=lambda: login_page(root, db), font=("Ariel 15 bold"))
     logout_button.place(x=24*window_width // 30, y=window_height // 20, height=window_height // 15, width=1 * window_width // 5 - 35)
 
-    delete_button = Button(root, text="Delete this item", command=lambda: delete_clicked, font=("Ariel 15 bold"))
-    delete_button.place(x=100, y=450, height=40, width=350)
+    delete_button = Button(frame, text="Delete this item", command=delete_clicked, font=("Ariel 15 bold"))
+    delete_button.place(x=120, y=450, height=40, width=350)
 
     root.mainloop()
 
@@ -740,7 +745,6 @@ def add_food_item_page(restaurant, parent_window = None, db = None):
                         width=1 * window_width // 5 - 35)
 
     root.mainloop()
-
 
 def add_address(user, parent_window=None, db=None):
     if db == None:
@@ -848,7 +852,6 @@ def add_address(user, parent_window=None, db=None):
     logout_button.place(x=700, y=20)
 
     root.mainloop()
-
 
 def edit_profile(user, parent_window=None, db=None):
     if db == None:
@@ -973,8 +976,7 @@ def edit_profile(user, parent_window=None, db=None):
 
     root.mainloop()
 
-
-def customer_home_page(user, parent_window=None, db=None):
+def customer_home_page(user, parent_window=None, db=None, page_number = 0):
     if db == None:
         db = DataBase()
 
@@ -1010,11 +1012,13 @@ def customer_home_page(user, parent_window=None, db=None):
     background_image_label.place(x=0, y=0)
 
     avbl_restaurants = db.restaurants_by_city(areaid)
-    print(avbl_restaurants)
+    restaurants = []
+    for x in avbl_restaurants:
+        restaurants.append(Restaurant(x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7],convert_string_to_bool(x[8])))
 
     profile_button = Button(root, text="Edit profile", command=lambda: edit_profile(user, root, db),
                             font=("Ariel 15 bold"))
-    profile_button.place(x=window_width // 30, y=window_height // 20, height=window_height // 15,
+    profile_button.place(x=24* window_width // 30, y=3*window_height // 20, height=window_height // 15,
                          width=1 * window_width // 5 - 35)
 
     logout_button = Button(root, text="Logout", command=lambda: login_page(root, db), font=("Ariel 15 bold"))
@@ -1022,7 +1026,6 @@ def customer_home_page(user, parent_window=None, db=None):
                         width=1 * window_width // 5 - 35)
 
     root.mainloop()
-
 
 def delivery_person_homepage(user, parent_window=None, db=None):
     if db == None:

@@ -467,7 +467,6 @@ def manage_restaurant_page(restaurant,parent_window = None,db = None, page_numbe
     background_image_label.place(x=0, y=0)
 
     frames = []
-    info_buttons = []
 
     num_pages = (len(restaurant.foodItems)+5)//6
 
@@ -537,7 +536,7 @@ def manage_restaurant_page(restaurant,parent_window = None,db = None, page_numbe
 
     def page_clicked():
         x = root.winfo_pointerx()
-        ind = (x-window_width//2+100)//50
+        ind = ((x-window_width//2+100)+70)//60
         ind -= 3
         print(ind)
         manage_restaurant_page(restaurant, root, db, ind)
@@ -547,7 +546,7 @@ def manage_restaurant_page(restaurant,parent_window = None,db = None, page_numbe
         if i == page_number:
             color = "grey"
         button = Button(root, text=str(i+1), command=page_clicked, font=("Ariel 15 bold"), bg = color)
-        button.place(x=window_width//2+i*50-100, y=window_height-70, height=30, width=50)
+        button.place(x=window_width//2+i*60-100, y=window_height-70, height=30, width=50)
 
     add_food_item_button = Button(root, text="Add Food Item", command=lambda: add_food_item_page(restaurant,root, db), font=("Ariel 15 bold"))
     add_food_item_button.place(x=24 * window_width // 30, y=3*window_height // 20, height=window_height // 15,
@@ -634,10 +633,13 @@ def manage_food_item(restaurant, fooditem, parent_window, db):
         manage_restaurant_page(restaurant, root, db)
 
     ok_button = Button(frame, text="OK", command=ok_clicked, font=("Ariel 15 bold"))
-    ok_button.place(x=40, y=420, height=40, width=250)
+    ok_button.place(x=40, y=380, height=40, width=250)
 
     def cancel_clicked():
         manage_restaurant_page(restaurant, root, db)
+
+    def delete_clicekd():
+        a = 1
 
     name_label.place(y=60, x=40)
     name_entry.place(y=60, x=240, width=350, height=30)
@@ -649,10 +651,13 @@ def manage_food_item(restaurant, fooditem, parent_window, db):
     availability_entry.place(y=300, x=240, width = 350, height = 30)
 
     cancel_button = Button(frame, text="Cancel", command=cancel_clicked, font = ("Ariel 15 bold"))
-    cancel_button.place(x=340, y=420, height=40, width=250)
+    cancel_button.place(x=340, y=380, height=40, width=250)
 
     logout_button = Button(root, text="Logout", command=lambda: login_page(root, db), font=("Ariel 15 bold"))
     logout_button.place(x=24*window_width // 30, y=window_height // 20, height=window_height // 15, width=1 * window_width // 5 - 35)
+
+    delete_button = Button(root, text="Delete this item", command=lambda: delete_clicked, font=("Ariel 15 bold"))
+    delete_button.place(x=100, y=450, height=40, width=350)
 
     root.mainloop()
 

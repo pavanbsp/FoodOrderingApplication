@@ -47,6 +47,14 @@ class DataBase:
                                                 name varchar(100),
                                                 city varchar(100))''')
 
+            cursor.execute('''CREATE TABLE IF NOT EXISTS orders(
+                                                order_id varchar(10) PRIMARY KEY,
+                                                food_items varchar(500),
+                                                customer_email varchar(50),
+                                                status varchar(20),
+                                                delivery_person_email varchar(50)
+                                                city varchar(100))''')
+
             cursor = self.database.cursor()
             cursor.execute("select * from areas")
             data = cursor.fetchall()
@@ -237,3 +245,57 @@ class DataBase:
         cursor.execute("INSERT into cart (item_id, user_email, food_id) values ('{0}','{1}','{2}')".format(id, user_email, food_id))
         self.database.commit()
         cursor.close()
+
+    def get_user_cart_items(self, user_email):
+        cursor = self.database.cursor()
+        cursor.execute("select * from cart where user_email = '{0}'".format(user_email))
+        data = cursor.fetchall()
+        return data
+
+    def get_food_item_by_id(self, food_id):
+        cursor = self.database.cursor()
+        cursor.execute("select * from food_items where food_id = '{0}'".format(food_id))
+        data = cursor.fetchall()
+        return data[0]
+
+    def remove_from_cart(self, item_id):
+        cursor = self.database.cursor()
+        cursor.execute("delete from cart where item_id = '{0}'".format(item_id))
+        self.database.commit()
+
+    def update_user_city(self, email, area, city):
+        cursor = self.database.cursor()
+
+        cursor.execute("select area_id from areas where city = '{0}' and name = '{1}'".format(city, area))
+        data = cursor.fetchall()
+        area_id = data[0][0]
+
+        cursor.execute(
+            "update users set area_id = '" + area_id + "' where email = '" + email + "'")
+
+        self.database.commit()
+        cursor.close()
+        return 1
+
+    def is_mobile_number_exists(self, mobile):
+        cursor = self.database.cursor()
+        cursor.execute("select * from users where contact = '{0}'".format(mobile))
+        data = cursor.fetchall()
+        if len(data) > 0:
+            return True
+        return False
+
+    def get_restaurant_id_
+
+    def insert_order(self, customer_email, food_ids):
+        cursor = self.database.cursor()
+        id = ""
+        for i in range(10):
+            id += (chr(np.random.randint(ord('0'), ord('9') + 1)))
+        cursor.execute("INSERT INTO orders (order_id, food_items, customer_email, status) values ('{0}','{1}','{2}','{3}')".format(id, food_ids, customer_email, "Being Prepared"))
+        self.database.commit()
+
+    def remove_from_cart(self, customer_email):
+        cursor = self.database.cursor()
+        cursor.execute("delete from cart where user_email = '{0}'".format(customer_email))
+        self.database.commit()

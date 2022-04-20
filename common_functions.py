@@ -72,3 +72,6 @@ def are_times_consequent(a,b,c):
         if cur.hours == c.hours and cur.minutes == c.minutes:
             return False
         cur.increment()
+
+def convert_food_ids_to_string(a):
+    return(",".join(a))

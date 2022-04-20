@@ -1263,6 +1263,11 @@ def view_restaurant_page(user, restaurant, parent_window = None, db = None, page
                 ind += 2
             elif x > 380:
                 ind += 1
+            db.add_to_cart(user.email, restaurant.foodItems[ind].food_id)
+            showinfo(
+                title='Success',
+                message='Item successfully added to the cart'
+            )
 
         val = "Currently unaivalable"
         color = "#FFB3B3"

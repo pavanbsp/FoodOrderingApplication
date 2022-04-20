@@ -30,7 +30,7 @@ class DataBase:
             cursor.execute('''CREATE TABLE IF NOT EXISTS cart(
                                                 item_id varchar(10) PRIMARY KEY,
                                                 food_id varchar(10),
-                                                user_id varchar(10))''')
+                                                user_email varchar(50))''')
 
             cursor.execute('''CREATE TABLE IF NOT EXISTS food_items(
                                                 food_id varchar(50) PRIMARY KEY,
@@ -229,11 +229,11 @@ class DataBase:
         self.database.commit()
         cursor.close()
 
-    def add_to_cart(self, user_id, food_id):
+    def add_to_cart(self, user_email, food_id):
         cursor = self.database.cursor()
         id = ""
         for i in range(10):
             id += (chr(np.random.randint(ord('0'), ord('9') + 1)))
-        cursor.execute("INSERT into cart (item_id, user_id, food_id) values ('{0}','{1}','{2}')".format(id, user_id, food_id))
+        cursor.execute("INSERT into cart (item_id, user_email, food_id) values ('{0}','{1}','{2}')".format(id, user_email, food_id))
         self.database.commit()
         cursor.close()

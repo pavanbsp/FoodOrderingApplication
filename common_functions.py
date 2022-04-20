@@ -75,3 +75,15 @@ def are_times_consequent(a,b,c):
 
 def convert_food_ids_to_string(a):
     return(",".join(a))
+
+def convert_string_to_food_ids(s):
+    food_ids = []
+    cur = ""
+    for x in s:
+        if x == ',':
+            food_ids.append(cur)
+            cur = ""
+            continue
+        cur += x
+    food_ids.append(cur)
+    return food_ids

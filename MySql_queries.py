@@ -52,7 +52,7 @@ class DataBase:
                                                 food_items varchar(500),
                                                 customer_email varchar(50),
                                                 status varchar(20),
-                                                delivery_person_email varchar(50)
+                                                delivery_person_email varchar(50),
                                                 city varchar(100))''')
 
             cursor = self.database.cursor()
@@ -67,6 +67,8 @@ class DataBase:
                 areas['Guntur'] = ['Lakshmipuram', 'Brodipet', 'Arundelpet', 'Chandramouli Nagar',
                                    'Brindavan Gardens', 'Koritepadu', 'Pattabhipuram', 'Old town',
                                    'Vidya Nagar', 'Nagaraly']
+                areas['Vizag'] = ['Akkayapalem','Kapuluppada','China Gadili','Madhurawada',
+                                  'Boyapalem','MVP Colony', 'Desaparthrunipalem']
 
 
                 for x in areas.keys():
@@ -285,17 +287,77 @@ class DataBase:
             return True
         return False
 
-    def get_restaurant_id_
-
-    def insert_order(self, customer_email, food_ids):
+    def insert_order(self, customer_email, food_ids, city):
         cursor = self.database.cursor()
         id = ""
         for i in range(10):
             id += (chr(np.random.randint(ord('0'), ord('9') + 1)))
-        cursor.execute("INSERT INTO orders (order_id, food_items, customer_email, status) values ('{0}','{1}','{2}','{3}')".format(id, food_ids, customer_email, "Being Prepared"))
+        cursor.execute("INSERT INTO orders (order_id, food_items, customer_email, status, city) values ('{0}','{1}','{2}','{3}','{4}')".format(id, food_ids, customer_email, "Being Prepared", city))
+        self.database.commit()
+    def remove_item_from_cart(self, item_id):
+        cursor = self.database.cursor()
+        cursor.execute("delete from cart where item_id = '{0}'".format(item_id))
         self.database.commit()
 
     def remove_from_cart(self, customer_email):
         cursor = self.database.cursor()
         cursor.execute("delete from cart where user_email = '{0}'".format(customer_email))
         self.database.commit()
+
+    def get_areaid_by_restaurant_id(self, restaurant_id):
+        cursor = self.database.cursor()
+        cursor.execute("select area_id from restaurants where restaurant_id = '{0}'".format(restaurant_id))
+        data = cursor.fetchall()
+        return data[0][0]
+
+    def get_orders_for_delivery_by_city(self, city):
+        cursor = self.database.cursor()
+        cursor.execute("select * from orders where city = '{0}' and delivery_person_email is NULL".format(city))
+        data = cursor.fetchall()
+        return data
+
+    def get_restaurant_name_from_id(self, restaurant_id):
+        cursor = self.database.cursor()
+        cursor.execute("select name from restaurants where restaurant_id = '{0}'".format(restaurant_id))
+        data = cursor.fetchall()
+        return data[0][0]
+
+    def get_areaid_by_user_email(self, user_email):
+        cursor = self.database.cursor()
+        cursor.execute("select area_id from users where email = '{0}'".format(user_email))
+        data = cursor.fetchall()
+        return data[0][0]
+
+    def set_delivery_person(self, order_id, delivery_email):
+        cursor = self.database.cursor()
+        cursor.execute("update orders set delivery_person_email = '{0}' where order_id = '{1}'".format(delivery_email, order_id))
+        self.database.commit()
+
+    def get_orders_by_delivery_email(self, email):
+        cursor = self.database.cursor()
+        cursor.execute("select * from orders where delivery_person_email = '{0}'".format(email))
+        data = cursor.fetchall()
+        return data
+
+    def get_address_by_restaurant_id(self, restaurant_id):
+        cursor = self.database.cursor()
+        cursor.execute("select address from restaurants where restaurant_id = '{0}'".format(restaurant_id))
+        data = cursor.fetchall()
+        return data[0][0]
+
+    def get_address_by_email(self, email):
+        cursor = self.database.cursor()
+        cursor.execute("select address from users where email = '{0}'".format(email))
+        data = cursor.fetchall()
+        return data[0][0]
+
+    def update_status(self, order_id, status):
+        cursor = self.database.cursor()
+        cursor.execute("update orders set status = '{0}' where order_id = '{1}'".format(status, order_id))
+        self.database.commit()
+
+    def get_orders_by_user_email(self, email):
+        cursor = self.database.cursor()
+        cursor.execute("select * from orders where customer_email = '{0}'".format(email))
+        data = cursor.fetchall()
+        return data

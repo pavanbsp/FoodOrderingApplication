@@ -68,7 +68,6 @@ def login_page(parent_window = None, db = None):
     register_button = Button(login_frame, text="Register", command=register_clicked, font = ("Ariel 15 bold"))
     register_button.place(x = window_width//30,y = 7*window_height//20,height = window_height//15,width = 2*window_width//5-35)
 
-    login_as_page('manager1@gmail.com', root, db)
     root.mainloop()
 
 def register_page(parent_window = None, db = None):
@@ -1168,6 +1167,10 @@ def customer_home_page(user, parent_window=None, db=None, page_number = 0):
     logout_button.place(x=24 * window_width // 30, y=window_height // 20, height=window_height // 15,
                         width=1 * window_width // 5 - 35)
 
+    my_orders_button = Button(root, text="My orders", command=lambda: my_orders_customer(user, root, db), font=("Ariel 15 bold"))
+    my_orders_button.place(x=24 * window_width // 30, y=7*window_height // 20, height=window_height // 15,
+                        width=1 * window_width // 5 - 35)
+
     def cart_clicked():
         cart_page(user, root, db, 0)
 
@@ -1302,7 +1305,6 @@ def view_restaurant_page(user, restaurant, parent_window = None, db = None, page
     go_to_cart_button = Button(root, text="Display cart", command=cart_clicked, font=("Ariel 15 bold"))
     go_to_cart_button.place(x=24 * window_width // 30, y=5 * window_height // 20, height=window_height // 15,
                             width=1 * window_width // 5 - 35)
-
     def page_clicked():
         x = root.winfo_pointerx()
         ind = ((x-window_width//2+100)+70)//60
@@ -1333,7 +1335,7 @@ def cart_page(user, parent_window = None, db = None, page_number = 0):
     if(parent_window != None):
         parent_window.destroy()
     root = tk.Tk()
-    root.title('Select food items')
+    root.title('Checkout')
 
     screen_width = root.winfo_screenwidth()
     screen_height = root.winfo_screenheight()
@@ -1420,7 +1422,7 @@ def cart_page(user, parent_window = None, db = None, page_number = 0):
                 message='Are you sure that you want to remove this item from the cart?'
             )
             if answer:
-                db.remove_from_cart(cart_items[ind].item_id)
+                db.remove_item_from_cart(cart_items[ind].item_id)
                 showinfo(
                     title='Success',
                     message='Item successfully removed from the cart.'
@@ -1443,15 +1445,19 @@ def cart_page(user, parent_window = None, db = None, page_number = 0):
                 message='Selected food items must be from the same restaurant'
             )
             return
-        food_ids = []
-        for x in food_items:
-            food_ids.append(x.food_id)
-        db.insert_order(user.email, convert_food_ids_to_string(food_ids))
-        db.remove_from_cart(user.email)
-        showinfo(
-            title='Success',
-            message='Order successfully placed'
-        )
+        if len(food_items) != 0:
+            food_ids = []
+            areaid = db.get_areaid_by_restaurant_id(food_items[0].restaurant_id)
+            city = db.city_by_areaid(areaid)
+            for x in food_items:
+                food_ids.append(x.food_id)
+            db.insert_order(user.email, convert_food_ids_to_string(food_ids),city)
+            db.remove_from_cart(user.email)
+            showinfo(
+                title='Success',
+                message='Order successfully placed'
+            )
+            cart_page(user, root, db)
 
     def page_clicked():
         x = root.winfo_pointerx()
@@ -1581,8 +1587,6 @@ def add_city(user, parent_window=None, db=None):
             message=msg
         )
 
-
-
     register_button = Button(frame, text="Update city", command=register_clicked, font=("Ariel 12 bold"))
     register_button.place(x=150, y=180, height=40, width=150)
 
@@ -1594,7 +1598,7 @@ def add_city(user, parent_window=None, db=None):
 
     root.mainloop()
 
-def delivery_person_homepage(user, parent_window=None, db=None):
+def delivery_person_homepage(user, parent_window=None, db=None, page_number = 0):
     if db == None:
         db = DataBase()
 
@@ -1625,7 +1629,7 @@ def delivery_person_homepage(user, parent_window=None, db=None):
     root.iconbitmap('Images/logo.ico')
     root.resizable(False, False)
     background_image = ImageTk.PhotoImage(
-        Image.open('Images/cus.jpg').resize((window_width + 100, window_height), Image.ANTIALIAS))
+        Image.open('Images/del.jpg').resize((window_width + 100, window_height), Image.ANTIALIAS))
     background_image_label = tk.Label(root, image=background_image)
     background_image_label.image = background_image
     background_image_label.place(x=0, y=0)
@@ -1638,6 +1642,476 @@ def delivery_person_homepage(user, parent_window=None, db=None):
     logout_button = Button(root, text="Logout", command=lambda: login_page(root, db), font=("Ariel 15 bold"))
     logout_button.place(x=24 * window_width // 30, y=window_height // 20, height=window_height // 15,
                         width=1 * window_width // 5 - 35)
+
+    my_orders_button = Button(root, text="My orders", command=lambda:my_orders_page(user, root, db), font=("Ariel 15 bold"))
+    my_orders_button.place(x=24 * window_width // 30, y=5*window_height // 20, height=window_height // 15,
+                        width=1 * window_width // 5 - 35)
+
+    city = db.city_by_areaid(areaid)
+    data = db.get_orders_for_delivery_by_city(city)
+
+    orders = []
+    for x in data:
+
+        food_items = []
+        food_ids = convert_string_to_food_ids(x[1])
+        for y in food_ids:
+            f = db.get_food_item_by_id(y)
+            food_items.append(FoodItem(f[0], f[1], f[2], f[3], f[5], convert_string_to_bool(f[4])))
+
+        orders.append(Order(x[0], food_items, x[2], x[3], x[4], x[5]))
+
+
+    if len(orders) == 0:
+        no_label = Label(root, text="Currently no orders to pick up in your city", font=("Goudy old style", 18, "bold"), fg="grey", bg="white")
+        no_label.place(x = window_width//2-200,y = 50)
+
+    num_pages = (len(orders)+5)//6
+
+    for j in range(6*page_number, min(6*page_number+6, len(orders))):
+        i = j-(6*page_number)
+        xval = 30 + (i % 3)*350
+        yval = 50 + (i // 3)*320
+        new_frame = Frame(root, bg="white")
+        new_frame.place(x=xval, y=yval, height=270, width=300)
+
+        entry_frame = Frame(new_frame, bg="white")
+        entry_frame.place(x=0, y=0, height=210, width=300)
+
+        pickup_area_id = db.get_areaid_by_restaurant_id(orders[j].food_items[0].restaurant_id)
+        delivery_area_id = db.get_areaid_by_user_email(orders[j].customer_email)
+
+        name_label = Label(entry_frame, text="Restaurant \nname: ", font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
+        name_value = Text(entry_frame, font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
+        name_value.insert('1.0', db.get_restaurant_name_from_id(orders[j].food_items[0].restaurant_id))
+        name_value['state'] = 'disabled'
+        pickup_label = Label(entry_frame, text="Pickup \narea: ", font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
+        pickup_value = Text(entry_frame, font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
+        pickup_value.insert('1.0', db.get_area_by_areaid(pickup_area_id))
+        pickup_value['state'] = 'disabled'
+        delivery_label = Label(entry_frame, text="Delivery \narea: ", font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
+        delivery_value = Text(entry_frame, font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
+        delivery_value.insert('1.0', db.get_area_by_areaid(delivery_area_id))
+        delivery_value['state'] = 'disabled'
+        name_label.place(x=10, y=30)
+        name_value.place(x=110, y=30, width=180)
+        pickup_label.place(x=10, y=90)
+        pickup_value.place(x=110, y=90, width=180)
+        delivery_label.place(x=10, y=150)
+        delivery_value.place(x=110, y=150, width=180)
+
+        def pickup_clicked():
+            x = root.winfo_pointerx()
+            y = root.winfo_pointery()
+            ind = 6 * page_number
+            if y > 500:
+                ind += 3
+            if x > 730:
+                ind += 2
+            elif x > 380:
+                ind += 1
+            answer = askyesno(
+                title='Confirmation',
+                message='Are you sure that you want to deliver this order?'
+            )
+            if answer:
+                db.set_delivery_person(orders[ind].order_id,user.email)
+                delivery_person_homepage(user, root, db)
+
+        pickup_button = Button(new_frame, text="Take Up", command=pickup_clicked, font=("Ariel 15 bold"))
+        pickup_button.place(x=55, y=215, height=50,
+                                width=200)
+
+
+    def page_clicked():
+        x = root.winfo_pointerx()
+        ind = ((x-window_width//2+100)+70)//60
+        ind -= 3
+        cart_page(user, root, db, ind)
+
+    if num_pages > 1:
+        for i in range(num_pages):
+            color = "white"
+            if i == page_number:
+                color = "grey"
+            button = Button(root, text=str(i+1), command=page_clicked, font=("Ariel 15 bold"), bg = color)
+            button.place(x=window_width//2+i*60-100, y=window_height-70, height=30, width=50)
+
+
+    root.mainloop()
+
+def my_orders_page(user, parent_window, db, page_number = 0):
+    if db == None:
+        db = DataBase()
+
+    details = db.get_user_details(user.email)
+    user = User(user.email, details[0], details[1], details[2], details[3])
+    areaid = user.area_id
+
+    if (parent_window != None):
+        parent_window.destroy()
+
+    root = tk.Tk()
+    root.title('My orders')
+
+    if (areaid == None):
+        add_city(user, root, db)
+
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+
+    window_width = (6 * screen_width) // 7
+    window_height = (6 * screen_height) // 7
+
+    center_x = int(screen_width / 2 - window_width / 2)
+    center_y = int(screen_height / 2 - window_height / 2)
+
+    root.geometry(f'{window_width}x{window_height}+{center_x}+{center_y}')
+
+    root.iconbitmap('Images/logo.ico')
+    root.resizable(False, False)
+    background_image = ImageTk.PhotoImage(
+        Image.open('Images/del.jpg').resize((window_width + 100, window_height), Image.ANTIALIAS))
+    background_image_label = tk.Label(root, image=background_image)
+    background_image_label.image = background_image
+    background_image_label.place(x=0, y=0)
+
+    profile_button = Button(root, text="Edit city", command=lambda: add_city(user, root, db),
+                            font=("Ariel 15 bold"))
+    profile_button.place(x=24* window_width // 30, y=3*window_height // 20, height=window_height // 15,
+                         width=1 * window_width // 5 - 35)
+
+    logout_button = Button(root, text="Logout", command=lambda: login_page(root, db), font=("Ariel 15 bold"))
+    logout_button.place(x=24 * window_width // 30, y=window_height // 20, height=window_height // 15,
+                        width=1 * window_width // 5 - 35)
+
+    back_button = Button(root, text="Go Back", command=lambda: delivery_person_homepage(user, root, db),
+                              font=("Ariel 15 bold"))
+    back_button.place(x=24 * window_width // 30, y=5 * window_height // 20, height=window_height // 15,
+                           width=1 * window_width // 5 - 35)
+
+    city = db.city_by_areaid(areaid)
+    data = db.get_orders_by_delivery_email(user.email)
+
+    orders = []
+    for x in data:
+
+        food_items = []
+        food_ids = convert_string_to_food_ids(x[1])
+        for y in food_ids:
+            f = db.get_food_item_by_id(y)
+            food_items.append(FoodItem(f[0], f[1], f[2], f[3], f[5], convert_string_to_bool(f[4])))
+
+        orders.append(Order(x[0], food_items, x[2], x[3], x[4], x[5]))
+
+
+    if len(orders) == 0:
+        no_label = Label(root, text="You have not picked up any orders", font=("Goudy old style", 18, "bold"), fg="grey", bg="white")
+        no_label.place(x = window_width//2-200, y=50)
+
+    num_pages = (len(orders)+5)//6
+
+    for j in range(6*page_number, min(6*page_number+6, len(orders))):
+        i = j-(6*page_number)
+        xval = 30 + (i % 3)*350
+        yval = 50 + (i // 3)*320
+        new_frame = Frame(root, bg="white")
+        new_frame.place(x=xval, y=yval, height=270, width=300)
+
+        entry_frame = Frame(new_frame, bg="white")
+        entry_frame.place(x=0, y=0, height=150, width=300)
+
+        pickup_area_id = db.get_areaid_by_restaurant_id(orders[j].food_items[0].restaurant_id)
+        delivery_area_id = db.get_areaid_by_user_email(orders[j].customer_email)
+
+        name_label = Label(entry_frame, text="Restaurant: ", font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
+        name_value = Text(entry_frame, font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
+        name_value.insert('1.0', db.get_restaurant_name_from_id(orders[j].food_items[0].restaurant_id))
+        name_value['state'] = 'disabled'
+        pickup_label = Label(entry_frame, text="Pickup: ", font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
+        pickup_value = Text(entry_frame, font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
+        pickup_value.insert('1.0', db.get_area_by_areaid(pickup_area_id))
+        pickup_value['state'] = 'disabled'
+        delivery_label = Label(entry_frame, text="Delivery: ", font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
+        delivery_value = Text(entry_frame, font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
+        delivery_value.insert('1.0', db.get_area_by_areaid(delivery_area_id))
+        delivery_value['state'] = 'disabled'
+        status_label = Label(entry_frame, text="Pickup: ", font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
+        status_value = Text(entry_frame, font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
+        status_value.insert('1.0', orders[j].status)
+        status_value['state'] = 'disabled'
+        name_label.place(x=10, y=30)
+        name_value.place(x=110, y=30, width=180)
+        pickup_label.place(x=10, y=60)
+        pickup_value.place(x=110, y=60, width=180)
+        delivery_label.place(x=10, y=90)
+        delivery_value.place(x=110, y=90, width=180)
+        status_label.place(x=10, y=120)
+        status_value.place(x=110, y=120, width=180)
+
+        stats = ["Being Prepared", "On the way", "Delivered"]
+
+        def pickup_clicked():
+            x = root.winfo_pointerx()
+            y = root.winfo_pointery()
+            ind = 6 * page_number
+            if y > 500:
+                ind += 3
+            if x > 730:
+                ind += 2
+            elif x > 380:
+                ind += 1
+            answer = askyesno(
+                title='Confirmation',
+                message='Are you sure that you want to deliver this order?'
+            )
+            if answer:
+                db.set_delivery_person(orders[ind].order_id,user.email)
+                delivery_person_homepage(user, root, db)
+
+        def more_info_clicked():
+            x = root.winfo_pointerx()
+            y = root.winfo_pointery()
+            ind = 6 * page_number
+            if y > 500:
+                ind += 3
+            if x > 730:
+                ind += 2
+            elif x > 380:
+                ind += 1
+            msg = ""
+            price = 0
+            for x in orders[ind].food_items:
+                price += x.price
+            msg += "Email: "+orders[ind].customer_email + '\n'
+            msg += "Pickup Address: " + db.get_address_by_restaurant_id(orders[ind].food_items[0].restaurant_id) + '\n'
+            msg += "Delivery Address: "+ db.get_address_by_email(orders[ind].customer_email) + '\n'
+            msg += "Price: " + str(price)
+
+            showinfo(
+                title='Information',
+                message=msg
+            )
+
+        def update_clicked():
+            x = root.winfo_pointerx()
+            y = root.winfo_pointery()
+            ind = 6 * page_number
+            if y > 500:
+                ind += 3
+            if x > 730:
+                ind += 2
+            elif x > 380:
+                ind += 1
+            curstatus = orders[ind].status
+            newstatus = ""
+            if curstatus == stats[0]:
+                newstatus = stats[1]
+            if curstatus == stats[1]:
+                newstatus = stats[2]
+            answer = askyesno(
+                title = 'confirmation',
+                message = 'Are you sure that you want to update the status from {0} to {1}?'.format(curstatus, newstatus)
+            )
+            if answer:
+                db.update_status(orders[ind].order_id, newstatus)
+                my_orders_page(user, root, db)
+
+        more_info_button = Button(new_frame, text="More Info", command=more_info_clicked, font=("Ariel 15 bold"))
+        more_info_button.place(x=50, y=165, height=40,
+                                width=200)
+
+        update_button = Button(new_frame, text="Update status", command=update_clicked, font=("Ariel 15 bold"))
+        if orders[j].status != 'Delivered':
+            update_button.place(x=50, y=210, height=40,
+                                width=200)
+
+
+    def page_clicked():
+        x = root.winfo_pointerx()
+        ind = ((x-window_width//2+100)+70)//60
+        ind -= 3
+        cart_page(user, root, db, ind)
+
+    if num_pages > 1:
+        for i in range(num_pages):
+            color = "white"
+            if i == page_number:
+                color = "grey"
+            button = Button(root, text=str(i+1), command=page_clicked, font=("Ariel 15 bold"), bg = color)
+            button.place(x=window_width//2+i*60-100, y=window_height-70, height=30, width=50)
+
+
+    root.mainloop()
+
+def my_orders_customer(user, parent_window = None, db = None, page_number = 0):
+    if db == None:
+        db = DataBase()
+
+    details = db.get_user_details(user.email)
+    user = User(user.email, details[0], details[1], details[2], details[3])
+    areaid = user.area_id
+
+    if (parent_window != None):
+        parent_window.destroy()
+
+    root = tk.Tk()
+    root.title('My orders')
+
+    if (areaid == None):
+        add_city(user, root, db)
+
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+
+    window_width = (6 * screen_width) // 7
+    window_height = (6 * screen_height) // 7
+
+    center_x = int(screen_width / 2 - window_width / 2)
+    center_y = int(screen_height / 2 - window_height / 2)
+
+    root.geometry(f'{window_width}x{window_height}+{center_x}+{center_y}')
+
+    root.iconbitmap('Images/logo.ico')
+    root.resizable(False, False)
+    background_image = ImageTk.PhotoImage(
+        Image.open('Images/del.jpg').resize((window_width + 100, window_height), Image.ANTIALIAS))
+    background_image_label = tk.Label(root, image=background_image)
+    background_image_label.image = background_image
+    background_image_label.place(x=0, y=0)
+
+    logout_button = Button(root, text="Logout", command=lambda: login_page(root, db), font=("Ariel 15 bold"))
+    logout_button.place(x=24 * window_width // 30, y=window_height // 20, height=window_height // 15,
+                        width=1 * window_width // 5 - 35)
+
+    back_button = Button(root, text="Go Back", command=lambda: customer_home_page(user, root, db),
+                              font=("Ariel 15 bold"))
+    back_button.place(x=24 * window_width // 30, y=3 * window_height // 20, height=window_height // 15,
+                           width=1 * window_width // 5 - 35)
+
+    data = db.get_orders_by_user_email(user.email)
+
+    orders = []
+    for x in data:
+
+        food_items = []
+        food_ids = convert_string_to_food_ids(x[1])
+        for y in food_ids:
+            f = db.get_food_item_by_id(y)
+            food_items.append(FoodItem(f[0], f[1], f[2], f[3], f[5], convert_string_to_bool(f[4])))
+
+        orders.append(Order(x[0], food_items, x[2], x[3], x[4], x[5]))
+
+
+    if len(orders) == 0:
+        no_label = Label(root, text="You have not placed any orders till now", font=("Goudy old style", 18, "bold"), fg="grey", bg="white")
+        no_label.place(x = window_width//2-200, y=50)
+
+    num_pages = (len(orders)+5)//6
+
+    for j in range(6*page_number, min(6*page_number+6, len(orders))):
+        i = j-(6*page_number)
+        xval = 30 + (i % 3)*350
+        yval = 50 + (i // 3)*320
+        new_frame = Frame(root, bg="white")
+        new_frame.place(x=xval, y=yval, height=270, width=300)
+
+        entry_frame = Frame(new_frame, bg="white")
+        entry_frame.place(x=0, y=0, height=190, width=300)
+
+        pickup_area_id = db.get_areaid_by_restaurant_id(orders[j].food_items[0].restaurant_id)
+        delivery_area_id = db.get_areaid_by_user_email(orders[j].customer_email)
+
+        name_label = Label(entry_frame, text="Restaurant: ", font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
+        name_value = Text(entry_frame, font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
+        name_value.insert('1.0', db.get_restaurant_name_from_id(orders[j].food_items[0].restaurant_id))
+        name_value['state'] = 'disabled'
+        pickup_label = Label(entry_frame, text="Pickup: ", font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
+        pickup_value = Text(entry_frame, font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
+        pickup_value.insert('1.0', db.get_area_by_areaid(pickup_area_id))
+        pickup_value['state'] = 'disabled'
+        delivery_label = Label(entry_frame, text="Delivery: ", font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
+        delivery_value = Text(entry_frame, font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
+        delivery_value.insert('1.0', db.get_area_by_areaid(delivery_area_id))
+        delivery_value['state'] = 'disabled'
+        status_label = Label(entry_frame, text="Pickup: ", font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
+        status_value = Text(entry_frame, font=("Goudy old style", 14, "bold"), fg="grey", bg="white")
+        status_value.insert('1.0', orders[j].status)
+        status_value['state'] = 'disabled'
+        name_label.place(x=10, y=30)
+        name_value.place(x=110, y=30, width=180)
+        pickup_label.place(x=10, y=70)
+        pickup_value.place(x=110, y=70, width=180)
+        delivery_label.place(x=10, y=110)
+        delivery_value.place(x=110, y=110, width=180)
+        status_label.place(x=10, y=150)
+        status_value.place(x=110, y=150, width=180)
+
+        stats = ["Being Prepared", "On the way", "Delivered"]
+
+        def pickup_clicked():
+            x = root.winfo_pointerx()
+            y = root.winfo_pointery()
+            ind = 6 * page_number
+            if y > 500:
+                ind += 3
+            if x > 730:
+                ind += 2
+            elif x > 380:
+                ind += 1
+            answer = askyesno(
+                title='Confirmation',
+                message='Are you sure that you want to deliver this order?'
+            )
+            if answer:
+                db.set_delivery_person(orders[ind].order_id,user.email)
+                delivery_person_homepage(user, root, db)
+
+        def more_info_clicked():
+            x = root.winfo_pointerx()
+            y = root.winfo_pointery()
+            ind = 6 * page_number
+            if y > 500:
+                ind += 3
+            if x > 730:
+                ind += 2
+            elif x > 380:
+                ind += 1
+            msg = ""
+            price = 0
+            for x in orders[ind].food_items:
+                price += x.price
+            de = "Not assigned"
+            if orders[ind].delivery_person_email != None:
+                de = orders[ind].delivery_person_email
+            msg += "Delivery boy email: "+ de + '\n'
+            msg += "Pickup Address: " + db.get_address_by_restaurant_id(orders[ind].food_items[0].restaurant_id) + '\n'
+            msg += "Delivery Address: "+ db.get_address_by_email(orders[ind].customer_email) + '\n'
+            msg += "Price: " + str(price)
+
+            showinfo(
+                title='Information',
+                message=msg
+            )
+
+        more_info_button = Button(new_frame, text="More Info", command=more_info_clicked, font=("Ariel 15 bold"))
+        more_info_button.place(x=50, y=210, height=50,
+                                width=200)
+
+
+    def page_clicked():
+        x = root.winfo_pointerx()
+        ind = ((x-window_width//2+100)+70)//60
+        ind -= 3
+        cart_page(user, root, db, ind)
+
+    if num_pages > 1:
+        for i in range(num_pages):
+            color = "white"
+            if i == page_number:
+                color = "grey"
+            button = Button(root, text=str(i+1), command=page_clicked, font=("Ariel 15 bold"), bg = color)
+            button.place(x=window_width//2+i*60-100, y=window_height-70, height=30, width=50)
 
 
     root.mainloop()

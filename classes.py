@@ -65,3 +65,12 @@ class cart_item:
         self.item_id = item_id
         self.user_id = user_id
         self.food_id = food_id
+
+class Order:
+    def __init__(self, order_id, food_items, customer_email, status, delivery_person_email, city):
+        self.order_id = order_id
+        self.food_items = food_items
+        self.customer_email = customer_email
+        self.status = status
+        self.delivery_person_email = delivery_person_email
+        self.city = city

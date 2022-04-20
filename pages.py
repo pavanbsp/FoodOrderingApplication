@@ -9,6 +9,7 @@ from tkinter.messagebox import showinfo
 from tkinter.messagebox import askyesno
 from common_functions import *
 from classes import *
+from datetime import datetime
 
 def login_page(parent_window = None, db = None):
     if db == None:
@@ -67,7 +68,7 @@ def login_page(parent_window = None, db = None):
     register_button = Button(login_frame, text="Register", command=register_clicked, font = ("Ariel 15 bold"))
     register_button.place(x = window_width//30,y = 7*window_height//20,height = window_height//15,width = 2*window_width//5-35)
 
-    login_as_page('customer1@gmail.com',root,db)
+    login_as_page('customer2@gmail.com',root,db)
     root.mainloop()
 
 def register_page(parent_window = None, db = None):
@@ -470,6 +471,10 @@ def manage_restaurant_page(restaurant,parent_window = None,db = None, page_numbe
     frames = []
 
     num_pages = (len(restaurant.foodItems)+5)//6
+
+    if len(restaurant.foodItems) == 0:
+        no_label = Label(root, text="Currently no food items to display", font=("Goudy old style", 18, "bold"), fg="grey", bg="white")
+        no_label.place(x = window_width//2-200,y = 50)
 
     for j in range(6*page_number, min(6*page_number+6, len(restaurant.foodItems))):
         i = j-(6*page_number)
@@ -1016,6 +1021,134 @@ def customer_home_page(user, parent_window=None, db=None, page_number = 0):
     for x in avbl_restaurants:
         restaurants.append(Restaurant(x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7],convert_string_to_bool(x[8])))
 
+
+    for i in range(len(restaurants)):
+        s = restaurants[i].open_time
+        restaurants[i].open_time = mytime(int(s[0:2]), int(s[3:5]))
+        s = restaurants[i].close_time
+        restaurants[i].close_time = mytime(int(s[0:2]), int(s[3:5]))
+
+    from datetime import datetime
+    now = datetime.now()
+    current_time = now.strftime("%H:%M:%S")
+    cur_time = mytime(int(current_time[0:2]),int(current_time[3:5]))
+
+    status = []
+
+    for x in restaurants:
+        if are_times_consequent(x.open_time,cur_time,x.close_time):
+            status.append(1)
+        else:
+            status.append(0)
+
+    for i in range(len(restaurants)):
+        if restaurants[i].flag:
+            status[i] ^= 1
+
+    open_restaurants = []
+    closed_restaurants = []
+
+    for i in range(len(restaurants)):
+        if status[i]:
+            open_restaurants.append(restaurants[i])
+        else:
+            closed_restaurants.append(restaurants[i])
+
+    restaurants = []
+    status = []
+    for x in open_restaurants:
+        restaurants.append(x)
+        status.append(True)
+    for x in closed_restaurants:
+        restaurants.append(x)
+        status.append(False)
+
+    num_pages = (len(restaurants) + 5) // 6
+
+    for j in range(6 * page_number, min(6 * page_number + 6, len(restaurants))):
+        i = j - (6 * page_number)
+        xval = 30 + (i % 3) * 350
+        yval = 50 + (i // 3) * 320
+        new_frame = Frame(root, bg="white")
+        new_frame.place(x=xval, y=yval, height=270, width=300)
+
+        entry_frame = Frame(new_frame, bg="white")
+        entry_frame.place(x=0, y=0, height=110, width=300)
+
+        name_label = Label(entry_frame, text="Name: ", font=("Goudy old style", 12, "bold"), fg="grey", bg="white")
+        name_value = Text(entry_frame, font=("Goudy old style", 12, "bold"), fg="grey", bg="white")
+        name_value.insert('1.0', restaurants[j].name)
+        name_value['state'] = 'disabled'
+        timings_label = Label(entry_frame, text="Timings: ", font=("Goudy old style", 12, "bold"), fg="grey",
+                                   bg="white")
+        timings_value = Text(entry_frame, font=("Goudy old style", 12, "bold"), fg="grey", bg="white")
+        timings_value.insert('1.0', str(restaurants[j].open_time.hours) + ':' + str(restaurants[j].open_time.minutes) + " - " + str(restaurants[j].close_time.hours) + ':' + str(restaurants[j].close_time.minutes))
+        timings_value['state'] = 'disabled'
+        val = "Currently closed"
+        color = "#FFB3B3"
+        if status[j]:
+            val = "Open"
+            color = "#CCFFCC"
+        status_label = Label(new_frame, text=val, font=("Goudy old style", 15, "bold"), fg="grey", bg=color)
+        name_label.place(x=10, y=30)
+        name_value.place(x=110, y=30, width=180)
+        timings_label.place(x=10, y=70)
+        timings_value.place(x=110, y=70, width=180)
+        status_label.place(x=70, y=120, width = 150)
+
+        def info_clicked():
+            x = root.winfo_pointerx()
+            y = root.winfo_pointery()
+            ind = 6 * page_number
+            if y > 500:
+                ind += 3
+            if x > 730:
+                ind += 2
+            elif x > 380:
+                ind += 1
+            msg = ""
+            msg += "Address : " + restaurants[ind].address
+            msg += '\n'
+            msg += "Phone : " + restaurants[ind].phone
+            showinfo(
+                title='Information',
+                message=msg
+            )
+
+        def view_clicked():
+            x = root.winfo_pointerx()
+            y = root.winfo_pointery()
+            ind = 6 * page_number
+            if y > 500:
+                ind += 3
+            if x > 730:
+                ind += 2
+            elif x > 380:
+                ind += 1
+            view_restaurant_page(user, restaurants[ind],root,db,0)
+
+        view_button = Button(new_frame, text="View", command=view_clicked, font=("Ariel 15 bold"))
+        if status[j]:
+            view_button.place(x=20, y=210, height=40, width=170)
+
+        info_button = Button(new_frame, text="More info", command=info_clicked, font=("Ariel 15 bold"))
+        info_button.place(x=20, y=160, height=40, width=170)
+
+    def page_clicked():
+        x = root.winfo_pointerx()
+        ind = ((x - window_width // 2 + 100) + 70) // 60
+        ind -= 3
+        customer_home_page(user, root, db, ind)
+
+    if num_pages > 1:
+        for i in range(num_pages):
+            color = "white"
+            if i == page_number:
+                color = "grey"
+            button = Button(root, text=str(i + 1), command=page_clicked, font=("Ariel 15 bold"), bg=color)
+            button.place(x=window_width // 2 + i * 60 - 100, y=window_height - 70, height=30, width=50)
+
+
     profile_button = Button(root, text="Edit profile", command=lambda: edit_profile(user, root, db),
                             font=("Ariel 15 bold"))
     profile_button.place(x=24* window_width // 30, y=3*window_height // 20, height=window_height // 15,
@@ -1024,6 +1157,151 @@ def customer_home_page(user, parent_window=None, db=None, page_number = 0):
     logout_button = Button(root, text="Logout", command=lambda: login_page(root, db), font=("Ariel 15 bold"))
     logout_button.place(x=24 * window_width // 30, y=window_height // 20, height=window_height // 15,
                         width=1 * window_width // 5 - 35)
+
+    def cart_clicked():
+        a = 1
+
+    go_to_cart_button = Button(root, text="Display cart", command = lambda: cart_clicked, font=("Ariel 15 bold"))
+    go_to_cart_button.place(x=24 * window_width // 30, y=5*window_height // 20, height=window_height // 15,
+    width = 1 * window_width // 5 - 35)
+
+    root.mainloop()
+
+def view_restaurant_page(user, restaurant, parent_window = None, db = None, page_number = 0):
+    if db == None:
+        db = DataBase()
+    if(parent_window != None):
+        parent_window.destroy()
+    root = tk.Tk()
+    root.title('Select food items')
+
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+
+    window_width = (6*screen_width)//7
+    window_height = (6*screen_height)//7
+
+    center_x = int(screen_width/2-window_width/2)
+    center_y = int(screen_height/2-window_height/2)
+
+    root.geometry(f'{window_width}x{window_height}+{center_x}+{center_y}')
+
+    root.iconbitmap('Images/logo.ico')
+    root.resizable(False, False)
+
+    data = db.get_food_items(restaurant.id)
+    restaurant.foodItems = []
+
+    for x in data:
+        new_food_item = FoodItem(x[0], x[1], x[2], x[3], x[5], convert_string_to_bool(x[4]))
+        restaurant.addFoodItem(new_food_item)
+
+    background_image = ImageTk.PhotoImage(
+        Image.open('Images/manager_home_page_background.jpg').resize((window_width + 100, window_height),
+                                                                     Image.ANTIALIAS))
+    background_image_label = tk.Label(root, image=background_image)
+    background_image_label.image = background_image
+    background_image_label.place(x=0, y=0)
+
+    frames = []
+
+    if len(restaurant.foodItems) == 0:
+        no_label = Label(root, text="Currently no food items to display", font=("Goudy old style", 18, "bold"), fg="grey", bg="white")
+        no_label.place(x = window_width//2-200,y = 50)
+
+    num_pages = (len(restaurant.foodItems)+5)//6
+
+    for j in range(6*page_number, min(6*page_number+6, len(restaurant.foodItems))):
+        i = j-(6*page_number)
+        xval = 30 + (i % 3)*350
+        yval = 50 + (i // 3)*320
+        new_frame = Frame(root, bg="white")
+        new_frame.place(x=xval, y=yval, height=270, width=300)
+
+        entry_frame = Frame(new_frame, bg="white")
+        entry_frame.place(x=0, y=0, height=110, width=300)
+
+        name_label = Label(entry_frame, text="Name: ", font=("Goudy old style", 12, "bold"), fg="grey", bg="white")
+        name_value = Text(entry_frame, font=("Goudy old style", 12, "bold"), fg="grey", bg="white")
+        name_value.insert('1.0',restaurant.foodItems[j].name)
+        name_value['state'] = 'disabled'
+        availability_label = Label(entry_frame, text="Availability: ", font=("Goudy old style", 12, "bold"), fg="grey", bg="white")
+        availability_value = Text(entry_frame, font=("Goudy old style", 12, "bold"), fg="grey", bg="white")
+        availability_value.insert('1.0', convert_availability_to_string(restaurant.foodItems[j].availability))
+        availability_value['state'] = 'disabled'
+        price_label = Label(entry_frame, text="Price: ", font=("Goudy old style", 12, "bold"), fg="grey", bg="white")
+        price_value = Text(entry_frame, font=("Goudy old style", 12, "bold"), fg="grey", bg="white")
+        price_value.insert('1.0', str(restaurant.foodItems[j].price))
+        price_value['state'] = 'disabled'
+        name_label.place(x=10, y=30)
+        name_value.place(x=110, y=30, width=180)
+        price_label.place(x=10, y=70)
+        price_value.place(x=110, y=70, width=180)
+
+        def info_clicked():
+            x = root.winfo_pointerx()
+            y = root.winfo_pointery()
+            ind = 6*page_number
+            if y > 500:
+                ind += 3
+            if x > 730:
+                ind += 2
+            elif x > 380:
+                ind += 1
+            showinfo(
+                title='Information',
+                message=restaurant.foodItems[ind].description
+            )
+
+        def add_to_cart_clicked():
+            x = root.winfo_pointerx()
+            y = root.winfo_pointery()
+            ind = 6*page_number
+            if y > 500:
+                ind += 3
+            if x > 730:
+                ind += 2
+            elif x > 380:
+                ind += 1
+
+        val = "Currently unaivalable"
+        color = "#FFB3B3"
+        if restaurant.foodItems[j].availability:
+            val = "Available"
+            color = "#CCFFCC"
+        status_label = Label(new_frame, text=val, font=("Goudy old style", 15, "bold"), fg="grey", bg=color)
+        status_label.place(x=55, y=120, width = 200)
+
+        add_to_cart_button = Button(new_frame, text="Add to cart", command=add_to_cart_clicked, font=("Ariel 15 bold"))
+        if val == "Available":
+            add_to_cart_button.place(x=20, y=210, height=40, width=170)
+
+        info_button = Button(new_frame, text="More info", command=info_clicked, font=("Ariel 15 bold"))
+        info_button.place(x=20, y=160, height=40, width=170)
+
+        frames.append(new_frame)
+
+    def page_clicked():
+        x = root.winfo_pointerx()
+        ind = ((x-window_width//2+100)+70)//60
+        ind -= 3
+        view_restaurant_page(user, restaurant, root, db, ind)
+
+    if num_pages > 1:
+        for i in range(num_pages):
+            color = "white"
+            if i == page_number:
+                color = "grey"
+            button = Button(root, text=str(i+1), command=page_clicked, font=("Ariel 15 bold"), bg = color)
+            button.place(x=window_width//2+i*60-100, y=window_height-70, height=30, width=50)
+
+    go_back_button = Button(root, text="Go back", command=lambda: customer_home_page(user,root,db), font=("Ariel 15 bold"))
+    go_back_button.place(x=24 * window_width // 30, y=3*window_height // 20, height=window_height // 15,
+                        width=1*window_width // 5 - 35)
+
+    logout_button = Button(root, text="Logout", command=lambda: login_page(root, db), font=("Ariel 15 bold"))
+    logout_button.place(x=24 * window_width // 30, y=window_height // 20, height=window_height // 15,
+                        width=1*window_width // 5 - 35)
 
     root.mainloop()
 

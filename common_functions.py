@@ -51,8 +51,24 @@ def convert_availability_to_string(val):
     else:
         return "Not available"
 
-'''
-To-add
-make text boxes scrollable to be able to manage more data
+class mytime:
+    def __init__(self, hours, minutes):
+        self.hours = hours
+        self.minutes = minutes
+    def increment(self):
+        self.minutes += 1
+        if self.minutes == 60:
+            self.minutes = 0
+            self.hours += 1
+            if self.hours == 24:
+                self.hours = 0
 
-'''
+
+def are_times_consequent(a,b,c):
+    cur = mytime(a.hours,a.minutes)
+    while(True):
+        if cur.hours == b.hours and cur.minutes == b.minutes:
+            return True
+        if cur.hours == c.hours and cur.minutes == c.minutes:
+            return False
+        cur.increment()

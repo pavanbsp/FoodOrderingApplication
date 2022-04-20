@@ -59,3 +59,9 @@ class Restaurant:
     #def getStatus(self):
         #return self.status
     #def displayFoodItems(self):
+
+class cart_item:
+    def __init__(self, item_id, user_id, food_id):
+        self.item_id = item_id
+        self.user_id = user_id
+        self.food_id = food_id

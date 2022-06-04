@@ -30,7 +30,7 @@ def login_page(parent_window = None, db = None):
     root.geometry(f'{window_width}x{window_height}+{center_x}+{center_y}')
 
     root.iconbitmap('Images/logo.ico')
-    background_image = ImageTk.PhotoImage(Image.open('Images/login-background.jpeg').resize((window_width+100,window_height),Image.ANTIALIAS))
+    background_image = ImageTk.PhotoImage(Image.open('Images/login-background.jpeg').resize((window_width+100, window_height), Image.ANTIALIAS))
     background_image_label = tk.Label(root, image=background_image)
     background_image_label.image = background_image
     background_image_label.place(x=0, y=0)
